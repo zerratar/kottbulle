@@ -1,11 +1,18 @@
 import { Kottbullescript as KS } from './ks/kottbullescript';
 import { KsProjectGenerator } from './generator/ksprojectgenerator';
-import { KsProjectTemplateProvider } from './generator/KsProjectTemplateProvider';
-import { KsProjectGeneratorSettings } from './generator/KsProjectGeneratorSettings';
+import { KsProjectTemplateProvider } from './generator/ksprojecttemplateprovider';
+import { KsProjectGeneratorSettings } from './generator/ksprojectgeneratorsettings';
 import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/definitions';
+
+/*
+    Load our awesome user signup script
+ */
 
 let script = KS.loadFile(`./scripts/usersignup.ks`);
 
+/*
+    setup and generate our project based on the user signup script
+ */
 let projectSettings  = new KsProjectGeneratorSettings();
 projectSettings.outDir = "./out/";
 projectSettings.projectName = "My awesome project";
@@ -14,34 +21,9 @@ let templateProvider = new KsProjectTemplateProvider();
 let generator        = new KsProjectGenerator(templateProvider);
 generator.generate(script, projectSettings);
 
-
 /*
- * Test case
+    Print out the loaded script details
  */
-// let script = Kottbullescript.load(`
-//     define type Fruit {
-//         name : string
-//     }
-
-//     define state Apple from Fruit {
-//         weight : number
-//         set name "Apple"
-//     }
-
-//     define case AddBanana {
-//         when {
-//             event my_awesome_button click
-//         }
-//         do {
-//             create myBanana from Fruit "Banana"
-//             create myApple from Apple
-//         }
-//         result {
-//             nothing
-//         }
-//     }
-// `);
-
 
 let app   = script.getApp();
 if (app) {

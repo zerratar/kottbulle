@@ -2,12 +2,12 @@
 import fs   = require('fs');
 import path = require('path');
 import { Kottbullescript } from './../ks/kottbullescript';
-import { KsProjectTemplate } from './KsProjectTemplate';
-import { KsProjectTemplateProvider } from './KsProjectTemplateProvider';
-import { KsProjectGeneratorSettings } from './KsProjectGeneratorSettings';
+import { KsProjectTemplate } from './ksprojecttemplate';
+import { KsProjectTemplateProvider } from './ksprojecttemplateprovider';
+import { KsProjectGeneratorSettings } from './ksprojectgeneratorsettings';
 
 /**
- * a Kottbulle project generator that will produce code based provided configurations
+ * a Kottbulle project generator that will produce code based on the provided configuration
  *  
  * @export
  * @class KsProjectGenerator

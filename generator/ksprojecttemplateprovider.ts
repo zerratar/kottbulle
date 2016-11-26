@@ -1,7 +1,7 @@
 /// <reference path="../typings/node/node.d.ts" />
 import fs   = require('fs');
 import path = require('path');
-import { KsProjectTemplate } from './KsProjectTemplate';
+import { KsProjectTemplate } from './ksprojecttemplate';
 
 export class KsProjectTemplateProvider {
 
