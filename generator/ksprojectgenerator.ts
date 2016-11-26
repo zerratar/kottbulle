@@ -51,7 +51,12 @@ export class KsProjectGenerator {
         if (!app) {
             throw SyntaxError("PANIC!!! App could not be found. Why u no define??");
         }
+        
         let language = app.meta.getValue("language");
+        if (!language) {
+            throw SyntaxError("PANIC!!! Output language not defined!! Did you forget to set the language? `set language \"language_name\"` example: `set language \"typescript\"`");
+        }
+
         let template = this.templateProvider.getTemplate(language);
         this.prepareProjectFolder(template, settings);        
     }
