@@ -1,3 +1,5 @@
+/// <reference path="../typings/node/node.d.ts" />
+import fs = require('fs');
 import { KsProgramTree } from './ksprogramtree';
 import { KsInterpreter } from './ksinterpreter';
 import { KsTransformer } from './kstransformer';
@@ -11,11 +13,11 @@ import { KsApp, KsType, KsCase, KsState, KsForm, KsDatasource } from './definiti
  * @export
  * @class Kottbullescript
  */
-export class Kottbullescript {    
-    
+export class Kottbullescript {
+
     private source  : string;
     private program : KsProgramTree;
-    
+
     constructor(src: string, program: KsProgramTree) {
         this.source  = src;
         this.program = program;
@@ -88,20 +90,29 @@ export class Kottbullescript {
      */
     static load(source: string): Kottbullescript {
         console.log("loading script...");
-        console.log("=============[SOURCE CODE]==========="); 
+        console.log("=============[SOURCE CODE]===========");
         console.log(source);
         console.log("=====================================");
         console.log();
         console.time("Köttbullescript->load");
-        
+
         let lexer       = new KsLexer();
         let transformer = new KsTransformer();
-        let validator   = new KsValidator();         
-        let interpreter = new KsInterpreter(lexer, transformer, validator);        
+        let validator   = new KsValidator();
+        let interpreter = new KsInterpreter(lexer, transformer, validator);
         let program     = interpreter.compile(source);
 
         console.timeEnd("Köttbullescript->load");
-        console.log();        
+        console.log();
         return new Kottbullescript(source, program);
-    }  
+    }
+
+    static loadFile(source: string) {
+        console.log('LOADING FILE ================================');
+        fs.readFile(source, (err, data) => {
+            if (err) throw err;
+            console.log(data);
+        });
+        console.log('FILE LOADED? ================================');
+    }
 }

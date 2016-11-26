@@ -1,6 +1,7 @@
 import { Kottbullescript } from './ks/kottbullescript';
 import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/definitions';
 
+let file = Kottbullescript.loadFile('./scripts/usersignup.ks');
 
 let script = Kottbullescript.load(`
     // test test comment
