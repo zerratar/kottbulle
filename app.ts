@@ -1,73 +1,56 @@
 import { Kottbullescript as KS } from './ks/kottbullescript';
 import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/definitions';
 
-let file = KS.loadFile(`./scripts/usersignup.ks`);
+let script = KS.loadFile(`./scripts/usersignup.ks`);
 
+// let script = KS.load(`
+//     define datasource UserCollection for User {
+//         set type "filesystem"
+//         set source "c:\\my_folder\\"
+//     }
 
-let script = KS.load(`
-    // test test comment
-    /*
-    define datasource UserCollection for User {
-        set type "filesystem"
-        set source "c:\\my_folder\\"
-    }
+//     define datasource MemoryUserCollection for User {
+//         set type "memory"
+//     }
 
-    define datasource MemoryUserCollection for User {
-        set type "memory"
-    }
+//     define form UserSignupForm {
+//         signup_button : button
+//         username : input_email
+//         password : input_password
+//     }
 
-    define form UserSignupForm {
-        signup_button : button
-        username : input_email
-        password : input_password
-    }
+//     define type User {
+//         username : string
+//         password : string
+//     }
 
-    define type User {
-        username : string
-        password : string
-    }*/
+//     define case UserSignup {
+//         when {
+//             event signup_button clicked
+//         }
+//         do {
+//             create newUser from User UserSignupForm.email UserSignupForm.password
+//         }
+//         result {
+//             store newUser
+//             store newUser in MemoryUserCollection
+//         }
+//     }    
 
-    define case UserSignup {
-        when {
-            event signup_button clicked
-        }
-        do {
-            create newUser from User UserSignupForm.email UserSignupForm.password
-        }
-        result {
-            store newUser
-            store newUser in MemoryUserCollection
-        }
-    }
-    
-    define app MyApp {
-        meta {
-            set title "My awesome app"
-            set description "My awesome app, that allows anyone. Even doges to register as a user!"
-            set version "0.1"
-            set author "kaaruschmidt"            
-            set platform "web"            
-            set langauge "typescript"                        
-        }
-        cases {
-            UserSignup
-        }
-    }    
-
-    define app MyApp {
-        meta {
-            set title "My awesome app"
-            set description "My awesome app, that allows anyone. Even doges to register as a user!"
-            set version "0.1"
-            set author "kaaruschmidt"            
-            set platform "web"            
-            set langauge "typescript"                        
-        }
-        cases {
-            UserSignup
-        }
-    }    
-`);
+//     define app MyApp {
+//         meta {
+//             set title "My awesome app"
+//             set description "My awesome app, that allows anyone. Even doges to register as a user!"
+//             set version "0.1"
+//             set author "kaaruschmidt"            
+//             set platform "web"            
+//             set langauge "typescript"                        
+//         }
+//         cases {
+//             UserSignup
+//         }
+//     }    
+// `);
 
 
 /*

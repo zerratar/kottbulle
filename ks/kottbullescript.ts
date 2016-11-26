@@ -101,30 +101,14 @@ export class Kottbullescript {
         let validator   = new KsValidator();
         let interpreter = new KsInterpreter(lexer, transformer, validator);
         let program     = interpreter.compile(source);
-
+ 
         console.timeEnd("Köttbullescript->load");
         console.log();
         return new Kottbullescript(source, program);
     }
 
-    static loadFile(source: string) {
-        let file = fs.readFile(source, 'utf8', (err, data) => {
-            if (err) throw err;
-            console.log(data); // returns the data
-            return data;
-        });
-
-        console.log(file); // undefined
-
-        /*
-        TODO: T___T can't get this to work...
-        let lexer       = new KsLexer();
-        let transformer = new KsTransformer();
-        let validator   = new KsValidator();
-        let interpreter = new KsInterpreter(lexer, transformer, validator);
-        let program     = interpreter.compile(file);
-
-        return new Kottbullescript(file, program);
-        */
+    static loadFile(file: string) : Kottbullescript {
+        let source = fs.readFileSync(file, 'utf8');
+        return this.load(source);        
     }
 }
