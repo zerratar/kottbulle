@@ -2,15 +2,18 @@ import { KsTypeNode,KsFormNode, KsDatasourceNode, KsCaseNode, KsCaseBodyNode, Ks
 import { KsForm, KsDatasource, KsType, KsCase, KsCaseBody, KsCaseBodyOperation, KsCreateOperation, KsEventOperation, KsArgument ,KsState, KsField, KsFieldReference, KsStoreOperation } from './definitions';
 import { KsProgramTree } from './ksprogramtree';
 import { KsTransformer } from './kstransformer';
+import { KsValidator } from './ksvalidator';
 import { KsLexer } from './kslexer';
 import { KsAst } from './ksast';
 
 export class KsInterpreter {
     private lexer       : KsLexer;             
     private transformer : KsTransformer;    
-    constructor(lexer : KsLexer, transformer : KsTransformer) {
+    private validator : KsValidator;
+    constructor(lexer : KsLexer, transformer : KsTransformer, validator : KsValidator) {
         this.lexer       = lexer;
         this.transformer = transformer;
+        this.validator   = validator;
     }
     
     /**
@@ -21,7 +24,9 @@ export class KsInterpreter {
     compile(source: string): KsProgramTree {
         let tokens = this.lexer.parse(source);
         let ast    = this.transformer.transform(tokens);
-        return this.buildProgramTree(ast);
+        let app    = this.buildProgramTree(ast);
+        this.validator.validateAndThrowIfFailed(app);        
+        return app;
     }
 
     /**

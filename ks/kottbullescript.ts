@@ -1,13 +1,16 @@
 import { KsProgramTree } from './ksprogramtree';
 import { KsInterpreter } from './ksinterpreter';
 import { KsTransformer } from './kstransformer';
+import { KsValidator } from './ksvalidator';
 import { KsLexer } from './kslexer';
 import { KsType, KsCase, KsState, KsForm, KsDatasource } from './definitions';
+
+
 export class Kottbullescript {    
     
     private source  : string;
     private program : KsProgramTree;
-
+    
     constructor(src: string, program: KsProgramTree) {
         this.source  = src;
         this.program = program;
@@ -48,11 +51,12 @@ export class Kottbullescript {
         
         let lexer       = new KsLexer();
         let transformer = new KsTransformer();
-        let interpreter = new KsInterpreter(lexer, transformer);        
+        let validator   = new KsValidator();         
+        let interpreter = new KsInterpreter(lexer, transformer, validator);        
         let program     = interpreter.compile(source);
 
         console.timeEnd("Köttbullescript->load");
         console.log();        
         return new Kottbullescript(source, program);
-    }
+    }  
 }
