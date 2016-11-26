@@ -5,8 +5,8 @@ import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/defi
 let script = KS.loadFile(`./scripts/usersignup.ks`);
 
 let projectSettings  = new KsProjectGeneratorSettings();
-projectSettings.outDir = "e:\\projects\\";
-projectSettings.projectName = "My awesome project";
+projectSettings.outDir = "./projects";
+projectSettings.projectName = "signup";
 
 let templateProvider = new KsProjectTemplateProvider();
 let generator        = new KsProjectGenerator(templateProvider);
