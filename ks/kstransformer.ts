@@ -145,12 +145,14 @@ export class KsTransformer {
         while (ctx.position < nodeCount) {
             this.walkNodes(ctx, ast.root.children);
             if (ctx.position >= nodeCount) break;
-        }
-        
-        while (ctx.typeDefinitions.length  > 0) finalApp.children.push(ctx.typeDefinitions.pop());        
-        while (ctx.stateDefinitions.length > 0) finalApp.children.push(ctx.stateDefinitions.pop());    
-        while (ctx.caseDefinitions.length  > 0) finalApp.children.push(ctx.caseDefinitions.pop());        
-        while (ctx.stack.length            > 0) finalApp.children.push(ctx.stack.pop());
+        }                
+
+        while (ctx.typeDefinitions.length        > 0) finalApp.children.splice(0, 0, ctx.typeDefinitions.pop());        
+        while (ctx.stateDefinitions.length       > 0) finalApp.children.splice(0, 0, ctx.stateDefinitions.pop());    
+        while (ctx.caseDefinitions.length        > 0) finalApp.children.splice(0, 0, ctx.caseDefinitions.pop());
+        while (ctx.formDefinitions.length        > 0) finalApp.children.splice(0, 0, ctx.formDefinitions.pop());
+        while (ctx.datasourceDefinitions.length  > 0) finalApp.children.splice(0, 0, ctx.datasourceDefinitions.pop());
+        while (ctx.stack.length                  > 0) finalApp.children.splice(0, 0, ctx.stack.pop());
 
         console.timeEnd("KsTransformer->finalTransform");
         return finalAst;
@@ -364,6 +366,7 @@ export class KsTransformer {
             for (let i = 0; i < newItems; i++) {
                 caseBody.children.push(ctx.stack.pop());
             }
+            caseBody.reverseChildren();
             caseNode.children.push(caseBody);
         }
         ctx.caseDefinitions.push(caseNode);
