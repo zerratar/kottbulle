@@ -61,7 +61,10 @@ export class KsProjectGenerator {
         this.prepareProjectFolder(template, settings);        
     }
 
-    private prepareProjectFolder(template : KsProjectTemplate, settings : KsProjectGeneratorSettings) {        
+    private prepareProjectFolder(template : KsProjectTemplate, settings : KsProjectGeneratorSettings) {                
+        if (!fs.existsSync(settings.outDir)) {
+            fs.mkdirSync(settings.outDir, 777);
+        }
         let rootDir = settings.outDir + "\\" + settings.projectName + "\\";
         if (!fs.existsSync(rootDir)) {
             fs.mkdirSync(rootDir, 777);
