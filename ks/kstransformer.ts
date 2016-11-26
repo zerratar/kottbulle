@@ -292,6 +292,7 @@ export class KsTransformer {
         for (let i = 0; i < newItems; i++) {
             datasource.children.push(ctx.stack.pop());
         }
+        datasource.reverseChildren();
         ctx.datasourceDefinitions.push(datasource);
     }    
 
@@ -315,6 +316,7 @@ export class KsTransformer {
         for (let i = 0; i < newItems; i++) {
             form.children.push(ctx.stack.pop());
         }
+        form.reverseChildren();
         ctx.formDefinitions.push(form);
     }
 
@@ -337,6 +339,7 @@ export class KsTransformer {
         for (let i = 0; i < newItems; i++) {
             type.children.push(ctx.stack.pop());
         }
+        type.reverseChildren();
         ctx.typeDefinitions.push(type);
     }
 
@@ -389,6 +392,7 @@ export class KsTransformer {
         for (let i = 0; i < newItems; i++) {
             state.children.push(ctx.stack.pop());
         }
+        state.reverseChildren();
         ctx.stateDefinitions.push(state);
     }
 

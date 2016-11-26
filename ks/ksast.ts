@@ -10,9 +10,9 @@ export class KsAstNode {
 
     reverseChildren() {
         this.children.reverse();
-        for (var child of this.children) {
-            child.reverseChildren();
-        }
+        // for (var child of this.children) {
+        //     child.reverseChildren();
+        // }
     }  
 }
 
