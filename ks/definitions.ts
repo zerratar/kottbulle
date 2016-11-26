@@ -20,6 +20,14 @@ export class KsFieldReference {
 
 export class KsAppMeta {
     values : KsFieldReference[] = [];
+    
+    getValue(key : string) {
+        for(var v of this.values) {
+            if (v.fieldName === key) {
+                return v.fieldValue;
+            }
+        }
+    }
 }
 
 export class KsApp {
@@ -28,7 +36,7 @@ export class KsApp {
     cases   : string[] = [];
     constructor (appName : string) {
         this.appName = appName;
-    }    
+    }        
 }
 
 export class KsForm {

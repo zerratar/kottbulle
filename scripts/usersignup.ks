@@ -40,7 +40,7 @@ define app MyApp {
         set version "0.1"
         set author "kaaruschmidt"            
         set platform "web"            
-        set langauge "typescript"                        
+        set language "typescript"                        
     }
     cases {
         UserSignup
