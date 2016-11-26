@@ -1,0 +1,22 @@
+{
+  "name": "kottbulle",
+  "version": "1.0.0",
+  "description": "A Swedish-Danish collaboration FTW.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerratar/kottbulle.git"
+  },
+  "author": "Shinobytes",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zerratar/kottbulle/issues"
+  },
+  "homepage": "https://github.com/zerratar/kottbulle#readme",
+  "dependencies": {
+    "file-system": "^2.2.2"
+  }
+}

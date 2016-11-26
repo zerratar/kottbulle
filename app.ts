@@ -1,6 +1,7 @@
+/// <reference path="./typings/node/node.d.ts" />
+import fs = require('fs');
 import { Kottbullescript } from './ks/kottbullescript';
 import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/definitions';
-
 
 let script = Kottbullescript.load(`
     // test test comment
