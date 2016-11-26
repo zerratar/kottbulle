@@ -6,12 +6,18 @@ import { KsProjectTemplate } from './ksprojecttemplate';
 export class KsProjectTemplateProvider {
 
     getTemplate(language: string) : KsProjectTemplate {
+        let templateSourceFolder = './project_templates/' + language;
         let template = new KsProjectTemplate();         
-        template.dirs = this.getDirsSync('./project_templates/' + language);
+        template.dirs               = this.getDirsSync(templateSourceFolder);
+        template.projectConfigFiles = this.getFilesSync(templateSourceFolder);
         return template;
     }
 
-    private getDirsSync(srcpath : string, includeSubFolders : boolean = true) : string[] {
+    private getFilesSync(srcpath : string) : string[] {
+        return fs.readdirSync(srcpath).filter((file : string) => fs.statSync(path.join(srcpath, file)).isFile()).map((f:string) => srcpath + '/' + f );
+    }
+
+    private getDirsSync(srcpath : string, includeSubFolders : boolean = true) : string[] {        
         let dirs = fs.readdirSync(srcpath).filter((file : string) => 
                fs.statSync(path.join(srcpath, file)).isDirectory());
         if (includeSubFolders) {

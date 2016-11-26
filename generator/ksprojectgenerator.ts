@@ -30,7 +30,8 @@ export class KsProjectGenerator {
         }
 
         let template = this.templateProvider.getTemplate(language);        
-        this.prepareProjectFolder(template, settings);        
+        this.prepareProjectFolder(template, settings);
+        this.prepareProjectConfigurations(template, settings); 
     }
 
     private prepareProjectFolder(template : KsProjectTemplate, settings : KsProjectGeneratorSettings) {                
@@ -47,5 +48,20 @@ export class KsProjectGenerator {
                 fs.mkdirSync(toCreate);
             }
         }        
+    }
+
+    private prepareProjectConfigurations(template : KsProjectTemplate, settings : KsProjectGeneratorSettings) {        
+        let configFiles = template.projectConfigFiles;        
+        if (configFiles && configFiles.length > 0) {
+            for(var file of configFiles) {
+                let filePaths  = file.split('/');
+                let fileName   = filePaths[filePaths.length-1];
+                let targetFile = settings.outDir + "/" + settings.projectName + "/" + fileName;
+                // NOTE(Kalle): this will not overwrite any files right now. So they have to be deleted on before hand if so                
+                if(!fs.existsSync(targetFile)) {
+                    fs.createReadStream(file).pipe(fs.createWriteStream(targetFile));
+                }
+            }                        
+        }
     }
 }

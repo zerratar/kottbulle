@@ -1,3 +1,4 @@
 export class KsProjectTemplate {
-    dirs: string[] = [];
+    dirs               : string[] = [];
+    projectConfigFiles : string[] = []; 
 }
