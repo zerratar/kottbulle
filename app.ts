@@ -1,5 +1,6 @@
 import { Kottbullescript as KS } from './ks/kottbullescript';
-import { KsProjectGenerator } from './generator/ksprojectgenerator';
+import { KsProjectGenerator, KsProjectCodeGeneratorProvider } from './generator/ksprojectgenerator';
+import { TypescriptCodeGenerator } from './generator_extensions/typescript';
 import { KsProjectTemplateProvider } from './generator/ksprojecttemplateprovider';
 import { KsProjectGeneratorSettings } from './generator/ksprojectgeneratorsettings';
 import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/definitions';
@@ -13,12 +14,16 @@ let script = KS.loadFile(`./scripts/usersignup.ks`);
 /*
     setup and generate our project based on the user signup script
  */
-let projectSettings  = new KsProjectGeneratorSettings();
-projectSettings.outDir = "./out/";
-projectSettings.projectName = "My awesome project";
+
+let codeGeneratorProvider = new KsProjectCodeGeneratorProvider();
+codeGeneratorProvider.registerCodeGenerator("typescript", new TypescriptCodeGenerator()); // register our typescript code generator, to extend support for more languages. make a new CodeGenerator :)
+
+
 
 let templateProvider = new KsProjectTemplateProvider();
-let generator        = new KsProjectGenerator(templateProvider);
+let generator        = new KsProjectGenerator(codeGeneratorProvider, templateProvider);
+let projectSettings  = new KsProjectGeneratorSettings("./out/", "My awesome project");
+
 generator.generate(script, projectSettings);
 
 /*

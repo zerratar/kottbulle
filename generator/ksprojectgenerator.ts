@@ -6,6 +6,36 @@ import { KsProjectTemplate } from './ksprojecttemplate';
 import { KsProjectTemplateProvider } from './ksprojecttemplateprovider';
 import { KsProjectGeneratorSettings } from './ksprojectgeneratorsettings';
 
+class CodeGeneratorLanguagePair {
+    language      : string;
+    codeGenerator : IKsProjectCodeGenerator;
+    constructor(language : string, codeGenerator : IKsProjectCodeGenerator) {
+        this.language      = language;
+        this.codeGenerator = codeGenerator;
+    }
+}
+
+export interface IKsProjectCodeGenerator {
+    generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings): void;
+}
+
+export class KsProjectCodeGeneratorProvider {
+    
+    codeGenerators: CodeGeneratorLanguagePair[] = [];
+
+    registerCodeGenerator(language : string, generator: IKsProjectCodeGenerator) {
+        this.codeGenerators.push(new CodeGeneratorLanguagePair(language, generator));
+    }
+
+    getCodeGenerator(language: string) : IKsProjectCodeGenerator {
+        for(var generator of this.codeGenerators) {
+            if(generator.language === language) {
+                return generator.codeGenerator;
+            }
+        }
+    } 
+}
+
 /**
  * a Kottbulle project generator that will produce code based on the provided configuration
  *  
@@ -14,8 +44,10 @@ import { KsProjectGeneratorSettings } from './ksprojectgeneratorsettings';
  */
 export class KsProjectGenerator {    
     private templateProvider : KsProjectTemplateProvider;
-    constructor(templateProvider : KsProjectTemplateProvider) {
-        this.templateProvider = templateProvider;
+    private codeGeneratorProvider    : KsProjectCodeGeneratorProvider;
+    constructor(codeGeneratorProvider: KsProjectCodeGeneratorProvider, templateProvider : KsProjectTemplateProvider) {
+        this.templateProvider      = templateProvider;
+        this.codeGeneratorProvider = codeGeneratorProvider;
     }
 
     generate(ks: Kottbullescript, settings: KsProjectGeneratorSettings) {
@@ -32,6 +64,7 @@ export class KsProjectGenerator {
         let template = this.templateProvider.getTemplate(language);        
         this.prepareProjectFolder(template, settings);
         this.prepareProjectConfigurations(template, settings); 
+        this.codeGeneratorProvider.getCodeGenerator(language).generate(ks, template, settings);
     }
 
     private prepareProjectFolder(template : KsProjectTemplate, settings : KsProjectGeneratorSettings) {                
