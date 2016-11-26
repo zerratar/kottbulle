@@ -6,7 +6,14 @@ export class KsAstNode {
     constructor(type: string, name: string) {        
         this.type = type;
         this.name = name;
-    }    
+    }  
+
+    reverseChildren() {
+        this.children.reverse();
+        for (var child of this.children) {
+            child.reverseChildren();
+        }
+    }  
 }
 
 export class KsAst {    
