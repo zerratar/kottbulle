@@ -32,3 +32,17 @@ define case UserSignup {
         store newUser in MemoryUserCollection
     }
 }    
+
+define app MyApp {
+    meta {
+        set title "My awesome app"
+        set description "My awesome app, that allows anyone. Even doges to register as a user!"
+        set version "0.1"
+        set author "kaaruschmidt"            
+        set platform "web"            
+        set langauge "typescript"                        
+    }
+    cases {
+        UserSignup
+    }
+}  

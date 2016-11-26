@@ -1,11 +1,12 @@
-import { KsTypeNode, KsFormNode, KsDatasourceNode, KsLiteralNode, KsFieldNode, KsStateNode, KsCaseNode, KsCaseBodyNode, KsEventNode, KsCreateNode, KsStateFieldSetNode, KsStoreNode} from './nodes/ksnodes';
+import { KsAppNode, KsTypeNode, KsFormNode, KsDatasourceNode, KsLiteralNode, KsFieldNode, KsStateNode, KsCaseNode, KsCaseBodyNode, KsEventNode, KsCreateNode, KsStateFieldSetNode, KsStoreNode} from './nodes/ksnodes';
 import { KsToken } from './kslexer';
 import { KsAst, KsAstNode } from './ksast';
 
 class KsTransformerContext {
     position              : number        = 0;
-    stack                 : KsAstNode[]   = [];
-    datasourceDefinitions : KsDatasourceNode[] = [];
+    stack                 : KsAstNode[]   = [];    
+    appDefinitions        : KsAppNode[]   = []; 
+    datasourceDefinitions : KsDatasourceNode[] = [];    
     typeDefinitions       : KsTypeNode[]  = [];
     caseDefinitions       : KsCaseNode[]  = [];
     stateDefinitions      : KsStateNode[] = [];
@@ -112,7 +113,7 @@ export class KsTransformer {
             || lc === "of"      || lc === "extends"   || lc === "implements"
             || lc === "use"     || lc === "import"    || lc === "include"
             || lc === "into"    || lc === "in"        || lc === "for"
-            || lc === "store";
+            || lc === "store"   || lc === "meta"      || lc === "cases" ;
     }
 
     private isNumber(token: string): boolean {
@@ -147,6 +148,7 @@ export class KsTransformer {
             if (ctx.position >= nodeCount) break;
         }
 
+        while (ctx.appDefinitions.length         > 0) finalApp.children.splice(0, 0, ctx.appDefinitions.pop());
         while (ctx.typeDefinitions.length        > 0) finalApp.children.splice(0, 0, ctx.typeDefinitions.pop());
         while (ctx.stateDefinitions.length       > 0) finalApp.children.splice(0, 0, ctx.stateDefinitions.pop());
         while (ctx.caseDefinitions.length        > 0) finalApp.children.splice(0, 0, ctx.caseDefinitions.pop());
@@ -181,7 +183,7 @@ export class KsTransformer {
             case "set"      : this.walkStateFieldSet(ctx, nodes, node); return;
             case "store"    : this.walkStore(ctx, nodes, node);         return;
             case "transform": this.walkTransform(ctx, nodes, node);     return;
-            case "nothing"  : case "none": this.walkEmpty(ctx);         return;
+            case "nothing"  : case "none" : this.walkEmpty(ctx);        return;            
             default         : throw new SyntaxError("The " + node.name + " definition is not implemented.");
         }
     }
@@ -264,6 +266,7 @@ export class KsTransformer {
         this.assertAvailableNodes(ctx, nodes, 1);
         let definitionType = nodes[++ctx.position];
         switch(definitionType.name) {
+            case "app"       : this.walkAppDefinition(ctx, nodes, node); return;
             case "case"      : this.walkCaseDefinition(ctx, nodes, node); return;
             case "type"      : this.walkTypeDefinition(ctx, nodes, node); return;
             case "state"     : this.walkStateDefinition(ctx, nodes, node); return;
@@ -275,8 +278,41 @@ export class KsTransformer {
         }
     }
 
+    private walkAppDefinition(ctx: KsTransformerContext, nodes : KsAstNode[], node : KsAstNode) { 
+        this.assertAvailableNodes(ctx, nodes, 2);
+        let nameNode = nodes[++ctx.position];
+        let appNode = new KsAppNode(nameNode.name);
+        // peek next to see if its a body
+        if (nodes[ctx.position + 1].type !== "body") {
+            // do something with the extra type decoration
+            // 'implements' 'extends' 'overrides' 'whatever'
+            throw new SyntaxError("App decoration not yet implemented");
+        }
+
+        let bodyNode = nodes[++ctx.position];
+        // a case has multiple bodies inside this one
+        // so we will need to get each seperately
+        for(let i = 0; i < bodyNode.children.length; i+=2) {
+            let appBodyName = bodyNode.children[i];
+            let appBodyNode = bodyNode.children[i+1];
+            let appBody = new KsCaseBodyNode(appBodyName.name);
+            let oldStackSize = ctx.stack.length;
+            this.walkBody(ctx, appBodyNode);
+            let newItems = ctx.stack.length - oldStackSize;
+            for (let i = 0; i < newItems; i++) {
+                appBody.children.push(ctx.stack.pop());
+            }
+            appBody.reverseChildren();
+            appNode.children.push(appBody);
+        }
+
+        appNode.reverseChildren();
+        ctx.position -= (appNode.children.length - 1);
+        ctx.appDefinitions.push(appNode);
+    }
+
     private walkDatasourceDefinition(ctx: KsTransformerContext, nodes : KsAstNode[], node : KsAstNode) {
-        this.assertAvailableNodes(ctx, nodes, 3);
+        this.assertAvailableNodes(ctx, nodes, 4);
         // define datasurce <name> for <type> <body>
         let nameNode  = nodes[++ctx.position];
         let decorator = nodes[++ctx.position];
@@ -372,6 +408,9 @@ export class KsTransformer {
             caseBody.reverseChildren();
             caseNode.children.push(caseBody);
         }
+
+        // seem like we are jumping ahead of ourselves
+        ctx.position -= (caseNode.children.length - 1);
         ctx.caseDefinitions.push(caseNode);
     }
 

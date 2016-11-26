@@ -80,6 +80,14 @@ export class KsCaseBodyNode extends KsAstNode {
     }
 }
 
+export class KsAppNode extends KsAstNode {
+    appName : string;
+    constructor (appName : string = "") {
+        super("definition", "app");
+        this.appName = appName;
+    }
+}
+
 export class KsDatasourceNode extends KsAstNode {
     datasourceName : string;
     datasourceType : string;

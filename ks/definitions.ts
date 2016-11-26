@@ -18,6 +18,19 @@ export class KsFieldReference {
     }    
 }
 
+export class KsAppMeta {
+    values : KsFieldReference[] = [];
+}
+
+export class KsApp {
+    appName : string;
+    meta    : KsAppMeta;
+    cases   : string[] = [];
+    constructor (appName : string) {
+        this.appName = appName;
+    }    
+}
+
 export class KsForm {
     formName : string;
     fields   : KsField[] = [];

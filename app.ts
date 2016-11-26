@@ -6,7 +6,7 @@ let file = KS.loadFile(`./scripts/usersignup.ks`);
 
 let script = KS.load(`
     // test test comment
-
+    /*
     define datasource UserCollection for User {
         set type "filesystem"
         set source "c:\\my_folder\\"
@@ -25,7 +25,7 @@ let script = KS.load(`
     define type User {
         username : string
         password : string
-    }
+    }*/
 
     define case UserSignup {
         when {
@@ -39,6 +39,34 @@ let script = KS.load(`
             store newUser in MemoryUserCollection
         }
     }
+    
+    define app MyApp {
+        meta {
+            set title "My awesome app"
+            set description "My awesome app, that allows anyone. Even doges to register as a user!"
+            set version "0.1"
+            set author "kaaruschmidt"            
+            set platform "web"            
+            set langauge "typescript"                        
+        }
+        cases {
+            UserSignup
+        }
+    }    
+
+    define app MyApp {
+        meta {
+            set title "My awesome app"
+            set description "My awesome app, that allows anyone. Even doges to register as a user!"
+            set version "0.1"
+            set author "kaaruschmidt"            
+            set platform "web"            
+            set langauge "typescript"                        
+        }
+        cases {
+            UserSignup
+        }
+    }    
 `);
 
 
@@ -68,6 +96,13 @@ let script = KS.load(`
 //         }
 //     }
 // `);
+
+
+let app   = script.getApp();
+if (app) {
+    console.log("define app: " + app.appName);
+    console.log();
+}
 
 let types  = script.getTypes();
 let cases  = script.getCases();

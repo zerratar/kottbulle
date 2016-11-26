@@ -5,9 +5,14 @@ import { KsInterpreter } from './ksinterpreter';
 import { KsTransformer } from './kstransformer';
 import { KsValidator } from './ksvalidator';
 import { KsLexer } from './kslexer';
-import { KsType, KsCase, KsState, KsForm, KsDatasource } from './definitions';
+import { KsApp, KsType, KsCase, KsState, KsForm, KsDatasource } from './definitions';
 
-
+/**
+ * Kottbullescript Kottbullescript Kottbullescript Kottbullescript Kottbullescript Kottbullescript   
+ * 
+ * @export
+ * @class Kottbullescript
+ */
 export class Kottbullescript {
 
     private source  : string;
@@ -18,22 +23,62 @@ export class Kottbullescript {
         this.program = program;
     }
 
+    /**
+     * get the defined app in this script
+     * 
+     * @returns {KsApp}     
+     * @memberOf Kottbullescript
+     */
+    getApp() : KsApp {
+        return this.program.getApp();
+    }
+
+    /**     
+     * get all defined forms in this script
+     * 
+     * @returns {KsForm[]}     
+     * @memberOf Kottbullescript
+     */
     getForms() : KsForm[] {
         return this.program.getForms();
     }
 
+    /**
+     * get all datasources defined in this script
+     * 
+     * @returns {KsDatasource[]}     
+     * @memberOf Kottbullescript
+     */
     getDatasources() : KsDatasource[] {
         return this.program.getDatasources();
     }
 
+    /**
+     * get all types defined in this script
+     * 
+     * @returns {KsType[]}     
+     * @memberOf Kottbullescript
+     */
     getTypes() : KsType[] {
         return this.program.getTypes();
     }
 
+    /**
+     * get all cases defined in this script
+     * 
+     * @returns {KsCase[]}     
+     * @memberOf Kottbullescript
+     */
     getCases() : KsCase[] {
         return this.program.getCases();
     }
 
+    /**
+     * get all states defined in this script
+     * 
+     * @returns {KsState[]}     
+     * @memberOf Kottbullescript
+     */
     getStates() : KsState[] {
         return this.program.getStates();
     }
