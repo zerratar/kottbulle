@@ -1,5 +1,7 @@
 import { Kottbullescript as KS } from './ks/kottbullescript';
-import { KsProjectGenerator, KsProjectTemplateProvider, KsProjectGeneratorSettings } from './generator/ksprojectgenerator';
+import { KsProjectGenerator } from './generator/ksprojectgenerator';
+import { KsProjectTemplateProvider } from './generator/KsProjectTemplateProvider';
+import { KsProjectGeneratorSettings } from './generator/KsProjectGeneratorSettings';
 import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/definitions';
 
 let script = KS.loadFile(`./scripts/usersignup.ks`);
