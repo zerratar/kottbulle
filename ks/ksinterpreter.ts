@@ -1,5 +1,5 @@
-import { KsTypeNode,KsFormNode, KsDatasourceNode, KsCaseNode, KsCaseBodyNode, KsStateNode, KsFieldNode, KsStateFieldSetNode, KsCreateNode, KsEventNode, KsStoreNode } from './nodes/ksnodes';
-import { KsForm, KsDatasource, KsType, KsCase, KsCaseBody, KsCaseBodyOperation, KsCreateOperation, KsEventOperation, KsArgument ,KsState, KsField, KsFieldReference, KsStoreOperation } from './definitions';
+import { KsAppNode,KsTypeNode,KsFormNode, KsDatasourceNode, KsCaseNode, KsCaseBodyNode, KsStateNode, KsFieldNode, KsStateFieldSetNode, KsCreateNode, KsEventNode, KsStoreNode } from './nodes/ksnodes';
+import { KsAppMeta, KsApp, KsForm, KsDatasource, KsType, KsCase, KsCaseBody, KsCaseBodyOperation, KsCreateOperation, KsEventOperation, KsArgument ,KsState, KsField, KsFieldReference, KsStoreOperation } from './definitions';
 import { KsProgramTree } from './ksprogramtree';
 import { KsTransformer } from './kstransformer';
 import { KsValidator } from './ksvalidator';
@@ -36,12 +36,53 @@ export class KsInterpreter {
      */
     private buildProgramTree(ast:KsAst): KsProgramTree {
         return new KsProgramTree(ast,
+            this.buildApps(ast),
             this.buildDatasources(ast),
             this.buildForms(ast),            
             this.buildTypes(ast),
             this.buildCases(ast),
             this.buildStates(ast)            
         );
+    }
+
+    private buildApps(ast: KsAst): KsApp[] {
+        let apps : KsApp[] = [];        
+        for (let i = 0; i < ast.root.children.length; i++){
+            let node = ast.root.children[i];                    
+            if (node instanceof KsAppNode) {
+                let appNode = node as KsAppNode;                    
+                let app = new KsApp(appNode.appName);                
+                for (let j = 0; j < appNode.children.length; j++) {
+                    let caseBodyInfo = appNode.children[j];
+                    if (caseBodyInfo instanceof KsCaseBodyNode) {
+                        let caseBodyNode = caseBodyInfo as KsCaseBodyNode;
+                        if (caseBodyNode.bodyName === "meta") {
+                            let meta = new KsAppMeta();
+                            for (let j = 0; j < caseBodyNode.children.length; j++) {
+                                let fieldInfo = caseBodyNode.children[j];                    
+                                if (fieldInfo instanceof KsStateFieldSetNode) {                        
+                                    let fieldSet = fieldInfo as KsStateFieldSetNode;
+                                    meta.values.push(new KsFieldReference(fieldSet.fieldName, fieldSet.fieldValue));
+                                }
+                            }           
+                            app.meta = meta;     
+                        }
+                        else if(caseBodyNode.bodyName === "cases") {
+                            let cases : string[] = [];
+                             for (let j = 0; j < caseBodyNode.children.length; j++) {
+                                cases.push(caseBodyNode.children[j].name);
+                            }               
+                            app.cases = cases; 
+                        }
+                        else {
+                            throw SyntaxError("Unknown app body '" + caseBodyNode.bodyName + "'");
+                        }                                              
+                    }                    
+                }        
+                apps.push(app);        
+            }
+        }
+        return apps;
     }
 
     private buildDatasources(ast: KsAst): KsDatasource[] {

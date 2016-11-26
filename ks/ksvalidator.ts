@@ -13,11 +13,17 @@ export class KsValidator {
 
     validate(app: KsProgramTree): KsValidationResult {
 
-        
+
 
         return new KsValidationResult(true);
     }
 
+    /**
+     * validates the input KsProgramTree and throws an error if failed
+     * 
+     * @param {KsProgramTree} app     
+     * @memberOf KsValidator
+     */
     validateAndThrowIfFailed(app: KsProgramTree) {
         let result = this.validate(app);
         if (!result.isSuccess) {            

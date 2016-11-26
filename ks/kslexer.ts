@@ -111,12 +111,13 @@ export class KsLexer {
     }
 
     private readMultiLineComment(token: string, source: string, ctx: KsLexerContext) : KsToken {
-        let comment = "";
+        let comment = "/*";
         do {
             let nextChar = source[++ctx.position];                        
             if (nextChar === "*" && ctx.position+1<source.length) {
                 nextChar = source[++ctx.position];
-                if(nextChar === "/") {
+                if(nextChar === "/") {              
+                    ctx.position++;      
                     return new KsToken(comment, "comment");
                 }
                 comment += nextChar;
