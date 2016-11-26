@@ -1,9 +1,10 @@
-import { Kottbullescript } from './ks/kottbullescript';
+import { Kottbullescript as KS } from './ks/kottbullescript';
 import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/definitions';
 
-let file = Kottbullescript.loadFile('./scripts/usersignup.ks');
+let file = KS.loadFile(`./scripts/usersignup.ks`);
 
-let script = Kottbullescript.load(`
+
+let script = KS.load(`
     // test test comment
 
     define datasource UserCollection for User {
@@ -39,6 +40,7 @@ let script = Kottbullescript.load(`
         }
     }
 `);
+
 
 /*
  * Test case

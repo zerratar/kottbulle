@@ -63,11 +63,23 @@ export class Kottbullescript {
     }
 
     static loadFile(source: string) {
-        console.log('LOADING FILE ================================');
-        fs.readFile(source, (err, data) => {
+        let file = fs.readFile(source, 'utf8', (err, data) => {
             if (err) throw err;
-            console.log(data);
+            console.log(data); // returns the data
+            return data;
         });
-        console.log('FILE LOADED? ================================');
+
+        console.log(file); // undefined
+
+        /*
+        TODO: T___T can't get this to work...
+        let lexer       = new KsLexer();
+        let transformer = new KsTransformer();
+        let validator   = new KsValidator();
+        let interpreter = new KsInterpreter(lexer, transformer, validator);
+        let program     = interpreter.compile(file);
+
+        return new Kottbullescript(file, program);
+        */
     }
 }
