@@ -37,12 +37,12 @@ export class KsProjectGenerator {
         if (!fs.existsSync(settings.outDir)) {
             fs.mkdirSync(settings.outDir);
         }
-        let rootDir = settings.outDir + "\\" + settings.projectName + "\\";
+        let rootDir = settings.outDir + "/" + settings.projectName + "/";
         if (!fs.existsSync(rootDir)) {
             fs.mkdirSync(rootDir);
         }
         for (var dir of template.dirs) {
-            let toCreate = settings.outDir + "\\" + settings.projectName + "\\" + dir;
+            let toCreate = settings.outDir + "/" + settings.projectName + "/" + dir + "/";
             if (!fs.existsSync(toCreate)) {
                 fs.mkdirSync(toCreate);
             }
