@@ -13,5 +13,8 @@ export class TypescriptCodeGenerator extends KsProjectCodeGeneratorBase {
     }
     generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {
         // this.copyToProjectFolder()
+
+        
+
     }
 }

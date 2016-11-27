@@ -164,6 +164,11 @@ export class KsTransformer {
     private walkNodes(ctx: KsTransformerContext, nodes : KsAstNode[]): boolean {
         if (ctx.position >= nodes.length) return false;
         let node = nodes[ctx.position];
+        if (node === undefined) {
+            // most likely a comment node that got skipped
+            ctx.position++;
+            return;
+        }
         switch (node.type) {
             case "comment": ctx.position++; break;
             case "colon"  : this.walkColon(ctx, nodes, node); return;

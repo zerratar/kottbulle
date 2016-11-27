@@ -1,3 +1,17 @@
+define form LoginForm {
+    username : input_email
+    password : input_password
+    loginButton : button
+}
+
+define form CreatePostForm {
+    title : input
+    body : input
+    something : input
+    somethingMore : input
+    postButton : button
+}
+
 define case PrintHelloWorld {
     when {
         event app.HelloWorld loaded
@@ -16,8 +30,9 @@ define app HelloWorld {
         set description "Hello world, I mean. Hi!"
         set version "0.1"
         set author "kaaruschmidt"
+        // set platform "web/singlepage"
         set platform "web"
-        set language "html5"
+        set language "html5"        
     }
     cases {
         PrintHelloWorld
