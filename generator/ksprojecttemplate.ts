@@ -1,4 +1,8 @@
-export class KsProjectTemplate {
+export class KsProjectTemplate {    
     dirs               : string[] = [];
-    projectConfigFiles : string[] = []; 
+    projectConfigFiles : string[] = [];
+    templateDir        : string;
+    constructor (templateDir : string) {
+        this.templateDir = templateDir;
+    } 
 }

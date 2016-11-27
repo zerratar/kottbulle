@@ -32,6 +32,16 @@ export class KsCreateNode extends KsAstNode {
     }
 }
 
+export class KsPrintNode extends KsAstNode {
+    toPrint : string;
+    byRef   : boolean;
+    constructor (toPrint : string, byRef : boolean) {
+        super("operation", "print");
+        this.toPrint = toPrint;
+        this.byRef   = byRef;
+    }
+}
+
 export class KsStoreNode extends KsAstNode {
     reference  : string;
     datasource : string;

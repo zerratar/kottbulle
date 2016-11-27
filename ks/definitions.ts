@@ -121,6 +121,16 @@ export class KsTransformOperation extends KsCaseBodyOperation {
     }    
 }
 
+export class KsPrintOperation extends KsCaseBodyOperation {
+    toPrint : string;
+    byRef   : boolean;
+    constructor(toPrint : string, byRef : boolean) {
+        super("print");
+        this.toPrint = toPrint;
+        this.byRef   = byRef;
+    }        
+}
+
 export class KsStoreOperation extends KsCaseBodyOperation {
     reference  : string;
     datasource : string;
@@ -144,5 +154,22 @@ export class KsCase {
     caseBodies : KsCaseBody[] = [];
     constructor (caseName : string) {
         this.caseName = caseName;
+    }    
+
+    getBody(name : string) : KsCaseBody {
+        if (!this.caseBodies || this.caseBodies.length === 0) return null;
+        return this.caseBodies.find((k : KsCaseBody) => k.bodyName === name);
+    }
+
+    getDo() : KsCaseBody {
+        return this.getBody("do");
+    }
+
+    getWhen() : KsCaseBody {
+        return this.getBody("when");
+    }
+
+    getResult() : KsCaseBody {
+        return this.getBody("result");
     }    
 }

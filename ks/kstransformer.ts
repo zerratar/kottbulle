@@ -1,4 +1,4 @@
-import { KsAppNode, KsTypeNode, KsFormNode, KsDatasourceNode, KsLiteralNode, KsFieldNode, KsStateNode, KsCaseNode, KsCaseBodyNode, KsEventNode, KsCreateNode, KsStateFieldSetNode, KsStoreNode} from './nodes/ksnodes';
+import { KsAppNode, KsTypeNode, KsFormNode, KsDatasourceNode, KsLiteralNode, KsFieldNode, KsStateNode, KsCaseNode, KsCaseBodyNode, KsEventNode, KsCreateNode, KsStateFieldSetNode, KsStoreNode, KsPrintNode } from './nodes/ksnodes';
 import { KsToken } from './kslexer';
 import { KsAst, KsAstNode } from './ksast';
 
@@ -113,7 +113,8 @@ export class KsTransformer {
             || lc === "of"      || lc === "extends"   || lc === "implements"
             || lc === "use"     || lc === "import"    || lc === "include"
             || lc === "into"    || lc === "in"        || lc === "for"
-            || lc === "store"   || lc === "meta"      || lc === "cases" ;
+            || lc === "store"   || lc === "meta"      || lc === "cases" 
+            || lc === "print"   || lc === "alert";
     }
 
     private isNumber(token: string): boolean {
@@ -182,10 +183,19 @@ export class KsTransformer {
             case "create"   : this.walkCreate(ctx, nodes, node);        return;
             case "set"      : this.walkStateFieldSet(ctx, nodes, node); return;
             case "store"    : this.walkStore(ctx, nodes, node);         return;
+            case "print"    : this.walkPrint(ctx, nodes, node);         return;
             case "transform": this.walkTransform(ctx, nodes, node);     return;
             case "nothing"  : case "none" : this.walkEmpty(ctx);        return;            
             default         : throw new SyntaxError("The " + node.name + " definition is not implemented.");
         }
+    }
+
+    private walkPrint(ctx: KsTransformerContext, nodes : KsAstNode[], node : KsAstNode) { 
+        this.assertAvailableNodes(ctx, nodes, 1);
+        // print <A>
+        let toPrintNode  = nodes[++ctx.position];        
+        ctx.stack.push(new KsPrintNode(toPrintNode.name, toPrintNode.type === "name"));
+        ctx.position++;                
     }
 
     private walkStore(ctx: KsTransformerContext, nodes : KsAstNode[], node : KsAstNode) {

@@ -1,5 +1,5 @@
-import { KsAppNode,KsTypeNode,KsFormNode, KsDatasourceNode, KsCaseNode, KsCaseBodyNode, KsStateNode, KsFieldNode, KsStateFieldSetNode, KsCreateNode, KsEventNode, KsStoreNode } from './nodes/ksnodes';
-import { KsAppMeta, KsApp, KsForm, KsDatasource, KsType, KsCase, KsCaseBody, KsCaseBodyOperation, KsCreateOperation, KsEventOperation, KsArgument ,KsState, KsField, KsFieldReference, KsStoreOperation } from './definitions';
+import { KsLiteralNode,KsAppNode,KsTypeNode,KsFormNode, KsDatasourceNode, KsCaseNode, KsCaseBodyNode, KsStateNode, KsFieldNode, KsStateFieldSetNode, KsCreateNode, KsEventNode, KsStoreNode, KsPrintNode } from './nodes/ksnodes';
+import { KsAppMeta, KsApp, KsForm, KsDatasource, KsType, KsCase, KsCaseBody, KsCaseBodyOperation, KsCreateOperation, KsEventOperation, KsArgument ,KsState, KsField, KsFieldReference, KsStoreOperation, KsPrintOperation } from './definitions';
 import { KsProgramTree } from './ksprogramtree';
 import { KsTransformer } from './kstransformer';
 import { KsValidator } from './ksvalidator';
@@ -70,7 +70,13 @@ export class KsInterpreter {
                         else if(caseBodyNode.bodyName === "cases") {
                             let cases : string[] = [];
                              for (let j = 0; j < caseBodyNode.children.length; j++) {
-                                cases.push(caseBodyNode.children[j].name);
+                                let n = caseBodyNode.children[j];
+                                if (n instanceof KsLiteralNode) {
+                                    cases.push((n as KsLiteralNode).value);
+                                }
+                                else {
+                                    cases.push(n.name);
+                                }
                             }               
                             app.cases = cases; 
                         }
@@ -177,6 +183,14 @@ export class KsInterpreter {
                                 let storeNode = caseBodyNode.children[k] as KsStoreNode;
                                 caseBody.operations.push(new KsStoreOperation(storeNode.reference, storeNode.datasource));
                             }
+                            
+                            if (caseBodyNode.children[k] instanceof KsPrintNode) {                                
+                                let printNode = caseBodyNode.children[k] as KsPrintNode;
+                                caseBody.operations.push(new KsPrintOperation(printNode.toPrint, printNode.byRef));
+                            }
+
+                            
+
                             /* 
                             if (caseBodyNode.children[k] instanceof KsTransformNode) {                                
                                 

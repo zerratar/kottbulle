@@ -7,9 +7,9 @@ export class KsProjectTemplateProvider {
 
     getTemplate(language: string) : KsProjectTemplate {
         let templateSourceFolder = './project_templates/' + language;
-        let template = new KsProjectTemplate();         
-        template.dirs               = this.getDirsSync(templateSourceFolder);
+        let template = new KsProjectTemplate(templateSourceFolder);                 
         template.projectConfigFiles = this.getFilesSync(templateSourceFolder);
+        template.dirs               = this.getDirsSync(templateSourceFolder);                
         return template;
     }
 

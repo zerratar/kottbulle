@@ -5,6 +5,7 @@ import { Kottbullescript } from './../ks/kottbullescript';
 import { KsProjectTemplate } from './ksprojecttemplate';
 import { KsProjectTemplateProvider } from './ksprojecttemplateprovider';
 import { KsProjectGeneratorSettings } from './ksprojectgeneratorsettings';
+import { KsCase, KsCaseBody, KsCaseBodyOperation, KsEventOperation } from './../ks/definitions';
 
 class CodeGeneratorLanguagePair {
     language      : string;
@@ -15,19 +16,86 @@ class CodeGeneratorLanguagePair {
     }
 }
 
+/**
+ * A contract for generating project code
+ * 
+ * @export
+ * @interface IKsProjectCodeGenerator
+ */
 export interface IKsProjectCodeGenerator {
     generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings): void;
 }
 
+
+/**
+ * A base class for implementing the IKsProjectCodeGenerator contract
+ * 
+ * @export
+ * @abstract
+ * @class KsProjectCodeGeneratorBase
+ * @implements {IKsProjectCodeGenerator}
+ */
+export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenerator {
+    protected language : string;
+    constructor (language : string){
+        this.language = language;
+    }
+
+    abstract generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings): void;
+    
+    protected writeProjectFile(targetFile : string, content : string, settings: KsProjectGeneratorSettings) {
+        fs.writeFileSync(settings.outDir + '/' + settings.projectName + '/' + targetFile, content, "utf8" );
+    }
+
+    protected copyToProjectFolder(srcfile : string, settings: KsProjectGeneratorSettings) {
+        throw new SyntaxError("not implemented");
+    }
+
+    protected findStartupCase(ks:Kottbullescript) : KsCase {        
+        let app      = ks.getApp();
+        let allCases = ks.getCases(); 
+        for(let caseName of app.cases) {
+            let c = allCases.find((k : KsCase) => k.caseName == caseName);
+            if (c) {
+                let when = c.caseBodies.find((k : KsCaseBody) => k.bodyName === "when");
+                if (when) {
+                    for(var op of when.operations) {
+                        if (this.willExecuteAutomatically(ks, op)) {
+                            return c;
+                        } 
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private willExecuteAutomatically(ks:Kottbullescript, op: KsCaseBodyOperation) : boolean {
+        if(op.action === "event") {
+            let event = op as KsEventOperation;
+            if (event.eventName === "loaded") {                
+                return event.reference.startsWith("app.") || event.reference.includes(ks.getApp().appName); 
+            }
+        }
+        return false;
+    }
+}
+
+/**
+ * A provider for Project Code Generators
+ * 
+ * @export
+ * @class KsProjectCodeGeneratorProvider
+ */
 export class KsProjectCodeGeneratorProvider {
     
     codeGenerators: CodeGeneratorLanguagePair[] = [];
 
-    registerCodeGenerator(language : string, generator: IKsProjectCodeGenerator) {
+    register(language : string, generator: IKsProjectCodeGenerator) {
         this.codeGenerators.push(new CodeGeneratorLanguagePair(language, generator));
     }
 
-    getCodeGenerator(language: string) : IKsProjectCodeGenerator {
+    get(language: string) : IKsProjectCodeGenerator {
         for(var generator of this.codeGenerators) {
             if(generator.language === language) {
                 return generator.codeGenerator;
@@ -64,7 +132,7 @@ export class KsProjectGenerator {
         let template = this.templateProvider.getTemplate(language);        
         this.prepareProjectFolder(template, settings);
         this.prepareProjectConfigurations(template, settings); 
-        this.codeGeneratorProvider.getCodeGenerator(language).generate(ks, template, settings);
+        this.codeGeneratorProvider.get(language).generate(ks, template, settings);
     }
 
     private prepareProjectFolder(template : KsProjectTemplate, settings : KsProjectGeneratorSettings) {                

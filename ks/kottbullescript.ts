@@ -89,11 +89,11 @@ export class Kottbullescript {
      * @returns {Kottbullescript}
      */
     static load(source: string): Kottbullescript {
-        console.log("loading script...");
-        console.log("=============[SOURCE CODE]===========");
-        console.log(source);
-        console.log("=====================================");
-        console.log();
+        // console.log("loading script...");
+        // console.log("=============[SOURCE CODE]===========");
+        // console.log(source);
+        // console.log("=====================================");
+        // console.log(); 
         console.time("Köttbullescript->load");
 
         let lexer       = new KsLexer();
