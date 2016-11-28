@@ -1,14 +1,11 @@
 // test test comment
 
 // only memory based store works right now
-/*
-define datasource UserCollection for User {
-    set type "filesystem"
-    set source "c:\\my_folder\\"      
-} */
 
-define datasource MemoryUserCollection for User {
-    set type "memory"
+define datasource UserCollection for User {
+    set type "localstorage"
+    // implemented:     set type "memory"
+    // not implemented: set type "filesystem"
 }
 
 define form UserSignupForm {     

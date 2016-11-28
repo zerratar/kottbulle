@@ -131,7 +131,7 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         //     break;
         // }
         let v   = this.getWindowRef(this.getVariableName(name, "instance"));
-        let src = this.getTemplateContent('/templates/datasource_template.js');
+        let src = this.getTemplateContent('/templates/datasource_' + type + '_template.js');
         return src.split("$datasourceName$").join(name)
                   .split("$instanceReference$").join(v);                          
     }
