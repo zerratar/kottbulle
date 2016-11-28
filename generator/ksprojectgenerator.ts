@@ -47,6 +47,15 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
         fs.writeFileSync(settings.outDir + '/' + settings.projectName + '/' + targetFile, content, "utf8" );
     }
 
+    protected getTemplateContent(templateFile : string) : string {
+        let sourceFile = './project_templates/' + this.language + '/' + templateFile;
+        if (!fs.existsSync(sourceFile)) {
+            console.warn("The expected template file '" + sourceFile + "' could not be found.");
+            return;
+        }
+        return fs.readFileSync(sourceFile, 'utf8');
+    }
+
     protected copyToProjectFolder(templateFile : string, destinationProjectFile: string, settings: KsProjectGeneratorSettings) {                
         let targetFile = settings.outDir + "/" + settings.projectName + "/" + destinationProjectFile;
         let sourceFile = './project_templates/' + this.language + '/' + templateFile;
@@ -84,7 +93,7 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
     private willExecuteAutomatically(ks:Kottbullescript, op: KsCaseBodyOperation) : boolean {
         if(op.action === "event") {
             let event = op as KsEventOperation;
-            if (event.eventName === "loaded") {                
+            if (event.eventName === "load") {                
                 return event.reference.startsWith("app.") || event.reference.includes(ks.getApp().appName); 
             }
         }

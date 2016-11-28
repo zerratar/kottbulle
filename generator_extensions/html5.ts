@@ -104,10 +104,10 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         for (var handler of eventHandlers) {
             let c      = ctx.script.getCase(handler.caseName);
             let doBody = c.getDo();
-            let script = "if (e.preventDefault) e.preventDefault(); " 
-                          + this.generateEventScriptBodyFromDo(doBody, ctx) // TODO(Kalle): Do something!
-                          + " return false;";                          
-            sitejs += ("function " + handler.eventHandler + "(e) { {{handlerBody}} }\n").replace("{{handlerBody}}", script);
+
+            let scriptFunction = this.getTemplateContent('/templates/event_template.js');
+            sitejs += scriptFunction.split("$eventHandlerName$").join(handler.eventHandler)
+                                    .split("$eventHandlerBody$").join(this.generateEventScriptBodyFromDo(doBody, ctx));
         }
         return sitejs;
     }
@@ -130,43 +130,35 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         //     default: 
         //     break;
         // }
-        let v = this.getWindowRef(this.getVariableName(name, "instance"));
-        return "class " + name + " { "
-        + "constructor() { "
-        + "this.items = []; "
-        + "} "
-        + "static getInstance() { " 
-                + "if(!" + v + " || " + v + " === undefined || " + v + " === null) { " + v + " = new "+name+"(); } return " + v + ";" 
-            + "} "
-        + "store(item) { this.items.push(item); } "
-        + "load(index) { return this.items[index]; } "
-        + "}";
+        let v   = this.getWindowRef(this.getVariableName(name, "instance"));
+        let src = this.getTemplateContent('/templates/datasource_template.js');
+        return src.split("$datasourceName$").join(name)
+                  .split("$instanceReference$").join(v);                          
     }
 
     private getTypeClassScript(type:KsType) : string {
         let argString = type.fields.map((f:KsField) => f.fieldName).join(", ");
-        let construct = type.fields.map((f:KsField) => "this." + f.fieldName + " = " + f.fieldName + ";").join(" ");
-        return "class " + type.typeName + " { "
-                + "constructor("+ argString +") { "
-                    + construct
-                + " }"
-            + " }";
+        let fields    = type.fields.map((f:KsField) => "this." + f.fieldName + " = " + f.fieldName + ";").join("\n        ");
+        let clss      = this.getTemplateContent('/templates/type_template.js');
+        return clss.split("$className$").join(type.typeName)
+                   .split("$parameters$").join(argString)
+                   .split("$fields$").join(fields);
     }
 
     private getStateClassScript(type:KsState) : string {
         let argString = type.fields.map((f:KsField) => f.fieldName).join(", ");
-        let construct = type.fields.map((f:KsField) => "this." + f.fieldName + " = " + f.fieldName + ";").join(" ");
-        let overrides = type.overrides.map((f:KsFieldReference) => "this." + f.fieldName + " = '" + f.fieldValue + "';").join(" ");
-        return "class " + type.stateName + " extends " + type.stateType + " { "
-                + "constructor("+ argString +") { "
-                    + construct
-                    + overrides
-                + " }"
-            + " }";
+        let construct = type.fields.map((f:KsField) => "this." + f.fieldName + " = " + f.fieldName + ";").join("\n        ");
+        let overrides = type.overrides.map((f:KsFieldReference) => "this." + f.fieldName + " = '" + f.fieldValue + "';").join("\n        ");        
+        let clss      = this.getTemplateContent('/templates/state_template.js');
+        return clss.split("$className$").join(type.stateName)
+                   .split("$baseType$").join(type.stateType)
+                   .split("$parameters$").join(argString)
+                   .split("$fields$").join(construct)
+                   .split("$overrides$").join(overrides);
     }
 
     private generateEventScriptBodyFromDo(doBody:KsCaseBody, ctx:ProjectGeneratorContext) : string {        
-        return doBody.operations.map( (op : KsCaseBodyOperation) => this.getOperationScript(op,ctx)).join(" ");
+        return doBody.operations.map( (op : KsCaseBodyOperation) => this.getOperationScript(op,ctx)).join("\n    ");
     }
 
     private getOperationScript(op : KsCaseBodyOperation, ctx:ProjectGeneratorContext) : string {
@@ -333,18 +325,9 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
     }    
 
     private generatePageContent(title : string, body : string) : string {
-        return `<!doctype html>
-<html lang="en">
-    <head>
-        <title>{{app.meta.title}}</title>
-        <link href="css/site.css" rel="stylesheet" />
-        <script src="js/site.js"></script>
-    </head>
-    <body>    
-        {{content}}
-    </body>
-</html>`.replace("{{app.meta.title}}", title)
-        .replace("{{content}}", body);        
+        let content = this.getTemplateContent('/templates/page_template.html');        
+        return content.split("{{app.meta.title}}").join(title)
+                      .split("{{content}}").join(body);        
     }
 
     private generateFormContent(ctx : ProjectGeneratorContext, form : KsForm, cases: KsCase[]): string {

@@ -19,7 +19,7 @@ export class KsProjectTemplateProvider {
 
     private getDirsSync(srcpath : string, includeSubFolders : boolean = true) : string[] {        
         let dirs = fs.readdirSync(srcpath).filter((file : string) => 
-               fs.statSync(path.join(srcpath, file)).isDirectory());
+               fs.statSync(path.join(srcpath, file)).isDirectory() && !file.startsWith('templates'));
         if (includeSubFolders) {
             for(var dir of dirs) {
                 for (var newDir of this.getDirsSync(srcpath + "/" + dir)) {
