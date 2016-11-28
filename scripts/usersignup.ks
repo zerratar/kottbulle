@@ -1,18 +1,20 @@
 // test test comment
 
+// only memory based store works right now
+/*
 define datasource UserCollection for User {
     set type "filesystem"
     set source "c:\\my_folder\\"      
-}
+} */
 
 define datasource MemoryUserCollection for User {
     set type "memory"
 }
 
-define form UserSignupForm { 
-    signup_button : button
+define form UserSignupForm {     
     username : input_email
     password : input_password
+    signup_button : button
 }
 
 define type User {
@@ -21,15 +23,16 @@ define type User {
 }
 
 define case UserSignup {
-    when {
-        event signup_button clicked
+    when {        
+        event form.UserSignupForm submit
     }
-    do {
-        create newUser from User UserSignupForm.email UserSignupForm.password
+    do {        
+        create newUser from User UserSignupForm.username UserSignupForm.password
+        print newUser.username        
+        store newUser in MemoryUserCollection                
     }
     result {
-        store newUser
-        store newUser in MemoryUserCollection
+        nothing
     }
 }    
 
@@ -40,9 +43,9 @@ define app MyApp {
         set version "0.1"
         set author "kaaruschmidt"            
         set platform "web"            
-        set language "typescript"                        
+        set language "html5"                        
     }
     cases {
-        UserSignup
+        UserSignup        
     }
 }  

@@ -14,7 +14,7 @@ define form CreatePostForm {
 
 define case PrintHelloWorld {
     when {
-        event app.HelloWorld loaded
+        event app.HelloWorld load
     }
     do {
         print "<h1>hello world</h1>"

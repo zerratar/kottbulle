@@ -43,6 +43,15 @@ export class Kottbullescript {
         return this.program.getForms();
     }
 
+    getForm(name : string) : KsForm {
+        return this.getForms().find((f:KsForm) => f.formName === name);
+    }
+
+    isForm(name : string) : boolean {
+        let form = this.getForm(name);
+        return form !== null && form !== undefined;
+    }
+
     /**
      * get all datasources defined in this script
      * 
@@ -51,6 +60,10 @@ export class Kottbullescript {
      */
     getDatasources() : KsDatasource[] {
         return this.program.getDatasources();
+    }
+
+    getDatasource(name : string) : KsDatasource {
+        return this.getDatasources().find((f:KsDatasource) => f.datasourceName === name);
     }
 
     /**
@@ -63,6 +76,10 @@ export class Kottbullescript {
         return this.program.getTypes();
     }
 
+    getType(name : string) : KsType {
+        return this.getTypes().find((f:KsType) => f.typeName === name);
+    }    
+
     /**
      * get all cases defined in this script
      * 
@@ -73,6 +90,10 @@ export class Kottbullescript {
         return this.program.getCases();
     }
 
+    getCase(name : string) : KsCase {
+        return this.getCases().find((f:KsCase) => f.caseName === name);
+    }    
+
     /**
      * get all states defined in this script
      * 
@@ -82,6 +103,10 @@ export class Kottbullescript {
     getStates() : KsState[] {
         return this.program.getStates();
     }
+
+    getState(name : string) : KsState {
+        return this.getStates().find((f:KsState) => f.stateName === name);
+    }    
 
     /**
      * loads the target kotbullescript source code and compiles it into a Köttbullescript object

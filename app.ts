@@ -12,8 +12,8 @@ let verbose : boolean = false;
     Load our awesome user signup script
  */
 
-// let script = KS.loadFile(`./scripts/usersignup.ks`);
-let script = KS.loadFile(`./scripts/html5_hello_world.ks`);
+let script = KS.loadFile(`./scripts/usersignup.ks`);
+// let script = KS.loadFile(`./scripts/html5_hello_world.ks`);
 
 /*
     setup and generate our project based on the user signup script

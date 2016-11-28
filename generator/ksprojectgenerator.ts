@@ -47,13 +47,19 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
         fs.writeFileSync(settings.outDir + '/' + settings.projectName + '/' + targetFile, content, "utf8" );
     }
 
-    protected copyToProjectFolder(srcfile : string, settings: KsProjectGeneratorSettings) {
-        throw new SyntaxError("not implemented");
+    protected copyToProjectFolder(templateFile : string, destinationProjectFile: string, settings: KsProjectGeneratorSettings) {                
+        let targetFile = settings.outDir + "/" + settings.projectName + "/" + destinationProjectFile;
+        let sourceFile = './project_templates/' + this.language + '/' + templateFile;
+        if (!fs.existsSync(sourceFile)) {
+            console.warn("The expected template file '" + sourceFile + "' could not be found.");
+            return;
+        }
+        fs.createReadStream(sourceFile).pipe(fs.createWriteStream(targetFile));        
     }
-
+    
     protected findStartupCase(ks:Kottbullescript) : KsCase {        
         let app      = ks.getApp();
-        let allCases = ks.getCases(); 
+        let allCases = ks.getCases();         
         for(let caseName of app.cases) {
             let c = allCases.find((k : KsCase) => k.caseName == caseName);
             if (c) {
@@ -67,6 +73,11 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
                 }
             }
         }
+
+        if (allCases.length > 0) {
+            return allCases[0];
+        }
+
         return null;
     }
 
