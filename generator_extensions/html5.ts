@@ -143,22 +143,18 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
     private getTypeClassScript(type:KsType) : string {
         let argString = type.fields.map((f:KsField) => f.fieldName).join(", ");
         let fields    = type.fields.map((f:KsField) => "this." + f.fieldName + " = " + f.fieldName + ";").join("\n        ");
-        let clss      = this.getTemplateContent('/templates/type_template.js');
-        return clss.split("$className$").join(type.typeName)
-                   .split("$parameters$").join(argString)
-                   .split("$fields$").join(fields);
+                
+        return this.templateProcessor.process('/templates/type_template.js', 
+        { "type": type, "$className$": type.typeName, "$parameters$": argString, "$fields$": fields });
     }
 
     private getStateClassScript(type:KsState) : string {
         let argString = type.fields.map((f:KsField) => f.fieldName).join(", ");
         let construct = type.fields.map((f:KsField) => "this." + f.fieldName + " = " + f.fieldName + ";").join("\n        ");
         let overrides = type.overrides.map((f:KsFieldReference) => "this." + f.fieldName + " = '" + f.fieldValue + "';").join("\n        ");        
-        let clss      = this.getTemplateContent('/templates/state_template.js');
-        return clss.split("$className$").join(type.stateName)
-                   .split("$baseType$").join(type.stateType)
-                   .split("$parameters$").join(argString)
-                   .split("$fields$").join(construct)
-                   .split("$overrides$").join(overrides);
+        
+        return this.templateProcessor.process('/templates/state_template.js', 
+        { "state": type, "$className$": type.stateName, "$baseType$": type.stateType, "$parameters$": argString, "$fields$": construct, "$overrides$":overrides });        
     }
 
     private generateEventScriptBodyFromDo(doBody:KsCaseBody, ctx:ProjectGeneratorContext) : string {        
