@@ -324,10 +324,8 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         return formsToExclude;
     }    
 
-    private generatePageContent(title : string, body : string) : string {
-        let content = this.getTemplateContent('/templates/page_template.html');        
-        return content.split("{{app.meta.title}}").join(title)
-                      .split("{{content}}").join(body);        
+    private generatePageContent(title : string, body : string) : string {        
+        return this.templateProcessor.process('/templates/page_template.html', { "{{app.meta.title}}": title, "{{content}}": body }); 
     }
 
     private generateFormContent(ctx : ProjectGeneratorContext, form : KsForm, cases: KsCase[]): string {
