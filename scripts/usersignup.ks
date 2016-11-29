@@ -6,6 +6,10 @@ define datasource UserCollection for User {
     set type "localstorage"
     // implemented:     set type "memory"
     // not implemented: set type "filesystem"
+    // you can define whatever value you want here
+    // and then use it in the template by doing $nameOfValue$    
+    set debug "true"
+    // to use the debug value, you just use $debug$ in the datasource templates, it will print without the quoutes
 }
 
 define form UserSignupForm {     
@@ -26,7 +30,7 @@ define case UserSignup {
     do {        
         create newUser from User UserSignupForm.username UserSignupForm.password
         print newUser.username        
-        store newUser in MemoryUserCollection                
+        store newUser in UserCollection                
     }
     result {
         nothing

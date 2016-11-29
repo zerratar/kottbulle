@@ -3,4 +3,8 @@ class $className$ extends $baseType$ {
         $fields$
         $overrides$
     }
+
+    toString() {
+        return "$className$";
+    }    
 }
