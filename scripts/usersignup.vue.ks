@@ -16,7 +16,7 @@ define datasource UserCollection for User {
 define form UserSignupForm {     
     Username : input_email
     Password : input_password
-    SignupButton : button
+    Signup_Button : button
 }
 
 define type User {

@@ -6,12 +6,15 @@ import { KsProjectTemplate } from './../generator/ksprojecttemplate';
 import { KsProjectTemplateProvider } from './../generator/ksprojecttemplateprovider';
 import { KsProjectGeneratorSettings } from './../generator/ksprojectgeneratorsettings';
 import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from './../generator/ksprojectgenerator';
-import { KsForm, KsType,KsFieldReference, KsDatasource,KsState, KsField, KsCase, KsArgument, KsCaseBody, KsPrintOperation, KsCreateOperation, KsStoreOperation, KsCaseBodyOperation } from './../ks/definitions';
+import { KsForm, KsType, KsEventOperation, KsFieldReference, KsDatasource,KsState, KsField, KsCase, KsArgument, KsCaseBody, KsPrintOperation, KsCreateOperation, KsStoreOperation, KsCaseBodyOperation } from './../ks/definitions';
+
+
 
 class KsComponent {
     name           : string;
     tag            : string;
     location       : string;    
+    events         : KsEventHandler[] = [];
     ctx            : KsProjectGeneratorContext;
     form           : KsForm;
     childComponents: KsComponent[] = [];
@@ -131,15 +134,17 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
     }
     
     getOrganismComponent(ctx : KsProjectGeneratorContext, form : KsForm, cases: KsCase[]): KsComponent {
-        let name      = form.formName;        
-        let tag       = name.toLowerCase().split('_').join("-");
-        let fieldType = name.split('_').map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");         
-        let component = new KsComponent();
+        let events      = this.generateEventHandlers(form.getEventsFromCases(ctx.script.getCases()));
+        let name        = form.formName;        
+        let tag         = name.toLowerCase().split('_').join("-");
+        let fieldType   = name.split('_').map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");         
+        let component   = new KsComponent();
+        component.events   = events;
         component.form     = form;
         component.ctx      = ctx; 
         component.name     = fieldType;
         component.tag      = tag;
-        component.location = 'components/organisms/' + component.name  + '.vue';
+        component.location = 'components/organisms/' + component.name  + '.vue';        
         for(var field of form.fields) {
             component.childComponents.push(this.getMoleculeComponent(ctx, form, field));
         }
@@ -147,12 +152,14 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
     }
 
     getMoleculeComponent(ctx : KsProjectGeneratorContext, form : KsForm, field : KsField) : KsComponent {
+        let fieldEvents = this.generateEventHandlers(field.getEventsFromCases(form.formName, ctx.script.getCases()));   
         let name      = field.fieldName;        
         let tag       = name.toLowerCase().split('_').join("-");
         let fieldType = name.split('_').map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");        
         let component = new KsComponent();
+        component.events   = fieldEvents;
         component.form     = form;
-        component.ctx      = ctx; 
+        component.ctx      = ctx;         
         component.name     = fieldType;
         component.tag      = tag; 
         component.location = 'components/molecules/' + component.name  + '.vue';   
@@ -160,18 +167,18 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         return component;        
     }
 
-    getAtomComponents(ctx : KsProjectGeneratorContext, form : KsForm, field : KsField) : KsComponent[] {
-        if (field.fieldType.includes("button")) {
+    getAtomComponents(ctx : KsProjectGeneratorContext, form : KsForm, field : KsField) : KsComponent[] {    
+        if (field.fieldType.includes("button")) {                        
             return [this.getAtomComponent(ctx, form, "ks" + field.fieldType)];
         }
-        let fieldType = field.fieldType;             
+        let fieldType = field.fieldType;        
         return [
             this.getAtomComponent(ctx, form, "kslabel"),
             this.getAtomComponent(ctx, form, fieldType)
         ];
     }
 
-    getAtomComponent(ctx : KsProjectGeneratorContext, form : KsForm, name : string) : KsComponent {        
+    getAtomComponent(ctx : KsProjectGeneratorContext, form : KsForm, name : string) : KsComponent {                
         let tag       = name.toLowerCase().split('_').join("-");
         let fieldType = name.split('_').map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");
         let component = new KsComponent();
@@ -181,5 +188,17 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         component.tag      = tag;
         component.location = 'components/atoms/' + component.name  + '.vue';        
         return component;        
+    }
+
+    generateEventHandlers(events:KsEventOperation[]):KsEventHandler[]{
+        let out:KsEventHandler[] = [];        
+        for(let e of events) {
+            let n = e.reference.split('.');
+            let name = n[n.length -1];
+            out.push(new KsEventHandler(e.reference, e.caseName, e.eventName, 
+                (e.caseName + `_on_` + name + `_` + e.eventName).split('.').join('_')
+            ))
+        }
+        return out;
     }
 }

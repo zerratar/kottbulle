@@ -1,5 +1,5 @@
 <template>
-    <div class="<%= model.component.name %>">
+    <div class="<%= model.component.name %>" <%= model.component.events.map(function(e) { return '@' + e.eventName + '="' + e.eventHandler + '();"' }).join(" ") %>>
     <% for(let i = 0; i < model.components.length; i++) { %>
         <<%= model.components[i].tag %>></<%= model.components[i].tag %>>
     <% } %>
