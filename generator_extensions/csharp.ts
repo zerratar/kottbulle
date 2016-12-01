@@ -7,12 +7,12 @@ import { KsProjectTemplateProvider } from './../generator/ksprojecttemplateprovi
 import { KsProjectGeneratorSettings } from './../generator/ksprojectgeneratorsettings';
 import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from './../generator/ksprojectgenerator';
 
-export class TypescriptCodeGenerator extends KsProjectCodeGeneratorBase {
+export class CsharpCodeGenerator extends KsProjectCodeGeneratorBase {
     constructor() {
-        super("typescript");
+        super("csharp");
     }
-    generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {            
-        console.log("Generating typescript project code... ");
+    generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {             
+        console.log("Generating c# project code... ");
         console.log("... And we're done!");    
     }
 }

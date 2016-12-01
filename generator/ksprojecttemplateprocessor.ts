@@ -21,10 +21,10 @@ export class KsProjectTemplateProcessor {
         this.codeGenerator = codeGenerator;
     }
 
-    process(templateFile : string, knowledgeBase : any) : string {                        
+    process(templateFile : string, model : any) : string {                        
         let content = this.codeGenerator.getTemplateContent(templateFile);
         let parsed  = this.parseTemplate(content);
-        return this.generate(parsed, knowledgeBase);
+        return this.generate(parsed, model);
     }
 
     private parseTemplate(template : string) : KsDynamicTemplate {
@@ -44,25 +44,26 @@ export class KsProjectTemplateProcessor {
         return template;
     }
 
+    // TODO(Kalle): remove hierarchy so we don't need to know whether a script is start or not and just 
+    //              process it as is. That way we can allow the usage of <% } else if (...) { %> and <% } else { %>     
     private walkToken(token:KsToken, tokens:KsToken[], ctx:KsDynamicTemplateContext) : KsDynamicTemplateNode {
         let node = new KsDynamicTemplateNode();        
         node.type  = token.type.includes("_") ? token.type.split('_')[0] : token.type;        
         node.value = token.value;
-        if (token.type.endsWith("_end")) {
-            throw new SyntaxError("Unexpected template script end.. err?");
-        }
-        if (token.type.endsWith("_start")) {
-            let next = tokens[++ctx.pos];
-            while (next && !next.type.endsWith("_end")) {
-                let n = this.walkToken(next, tokens, ctx);                
-                node.children.push(n);
-                next = tokens[ctx.pos];
-            }            
-            ctx.pos++;
-        }
-        else {
-            ctx.pos++;                        
-        }
+        
+        // if (token.type.endsWith("_end")) {
+        //     throw new SyntaxError("Unexpected template script end.. err?");
+        // }
+        // if (token.type.endsWith("_start")) {
+        //     let next = tokens[++ctx.pos];
+        //     while (next && !next.type.endsWith("_end")) {
+        //         let n = this.walkToken(next, tokens, ctx);                
+        //         node.children.push(n);
+        //         next = tokens[ctx.pos];
+        //     }                     
+        // }
+
+        ctx.pos++;
         return node;
     }
 
@@ -126,58 +127,70 @@ export class KsProjectTemplateProcessor {
         return tokens;
     }
 
-    private generate(template : KsDynamicTemplate, knowledgeBase : any) : string {        
-        let templateContents: string[] = [];
-        for(let node of template.nodes) {
-            templateContents.push(this.generateTemplateContent(node, knowledgeBase));
+    private generate(template : KsDynamicTemplate, model : any) : string {        
+        let hasScripts = false;
+        let evalResult : string = "";
+        let templateContents: string[] = [];      
+
+        let scriptobj = template.nodes.find((n:KsDynamicTemplateNode) => n.type === "script");
+        if (scriptobj && scriptobj !== undefined) {
+            hasScripts = true;
         }
-        return templateContents.join("");
+
+        for(let node of template.nodes) {                        
+            let content = this.generateTemplateContent(node, model, hasScripts);
+            templateContents.push(content);           
+        }
+        let finalContent = templateContents.join("");
+        if (hasScripts) {            
+            eval(finalContent);
+            return evalResult;
+        }
+        return finalContent;
     }
 
-    private generateTemplateContent(node:KsDynamicTemplateNode, knowledgeBase : any):string {
+    private generateTemplateContent(node:KsDynamicTemplateNode, model : any, isScript : boolean):string {
         let templateContents: string[] = [];
         if (node.type === "script") {
-            templateContents.push(this.evalTemplateScript(node, knowledgeBase));
+            templateContents.push(this.evalTemplateScript(node, model));
         } else {
-            return this.applyKnowledgeBase(node.value, knowledgeBase);
+            if (isScript) {
+                let val = " evalResult += `" + node.value + "`;";
+                return this.applyKnowledgeBase(val, model);
+            } else {
+                return this.applyKnowledgeBase(node.value, model);
+            }            
         }        
         return templateContents.join("");
     }
 
-    private evalTemplateScript(node:KsDynamicTemplateNode, knowledgeBase : any):string { 
+    private evalTemplateScript(node:KsDynamicTemplateNode, model : any):string { 
         if (node.value.startsWith("<%") && node.value.endsWith("%>")) {
-            let singleLine = false;
-            let evalResult = "";
+            let singleLine = false;            
             let script = node.value.substring(2);            
             script     = script.slice(0, script.length - 2); 
             if (script.startsWith("=")) { script = script.substring(1); singleLine = true; }           
             if (node.children.length > 0 || !singleLine) {                              
                 let scriptContent = "";
-
-                // TODO(Kalle): build whole script and then do ONE eval. otherwise we can't
-                //              access variables declared in upper scope ex:
-                //              script 1: for(let i = 0; i < 100; i++) {
-                //              script 2:    items[i]
-                //              eos    1: }        ^---- i is an undefined reference
-                //              this happens because we evaluate (script 2) before (script 1)
                 for(var c of node.children) {
-                    scriptContent += this.generateTemplateContent(c, knowledgeBase);
+                    scriptContent += this.generateTemplateContent(c, model, true);
                 } 
-                eval(script + "evalResult += `" + scriptContent + "`; }");
-                return this.applyKnowledgeBase(evalResult, knowledgeBase); 
+                let res = script + " " + scriptContent + " "; // }
+                return this.applyKnowledgeBase(res, model); 
             } else {                
-                eval("evalResult += " + script + ";");
-                return this.applyKnowledgeBase(evalResult, knowledgeBase);
+                let res = "evalResult += " + script + ";";
+                return this.applyKnowledgeBase(res, model);
             }            
         } else {
-            return this.applyKnowledgeBase(node.value, knowledgeBase);
+            let res = "evalResult += `" + node.value + "`;";
+            return this.applyKnowledgeBase(node.value, model);
         }
     }
 
-    private applyKnowledgeBase(content : string, knowledgeBase : any):string {
-        for(var key in knowledgeBase) {
+    private applyKnowledgeBase(content : string, model : any):string {
+        for(var key in model) {
             if (key.includes("$")) {
-                content = content.split(key).join(knowledgeBase[key]);
+                content = content.split(key).join(model[key]);
             }
         }        
         return content;

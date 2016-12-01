@@ -17,6 +17,47 @@ class CodeGeneratorLanguagePair {
     }
 }
 
+export class KsFormElement {
+    tag         : string = "";
+    type        : string = "";
+    placeholder : string = "";
+    content   : string = "";    
+}
+
+export class KsEventHandler {
+    reference : string;
+    caseName  : string;
+    eventName : string;    
+    eventHandler : string;
+    constructor (reference : string, caseName : string, eventName : string, eventHandler : string) {
+        this.reference    = reference;
+        this.caseName     = caseName;
+        this.eventName    = eventName;
+        this.eventHandler = eventHandler;        
+    }
+}
+
+
+
+export class KsProjectGeneratorContext {
+    settings : KsProjectGeneratorSettings;
+    template : KsProjectTemplate;
+    script   : Kottbullescript;
+    private eventHandlers : KsEventHandler[] = []; 
+    constructor(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {
+        this.script   = ks;
+        this.template = template;
+        this.settings = settings;
+    }
+    
+    addEventHandler(reference : string, caseName : string, eventName : string, eventHandler : string) {
+        this.eventHandlers.push(new KsEventHandler(reference, caseName, eventName, eventHandler));
+    }
+    getEventHandlers() : KsEventHandler[] {
+        return this.eventHandlers;
+    }
+}
+
 /**
  * A contract for generating project code
  * 
@@ -28,6 +69,7 @@ export interface IKsProjectCodeGenerator {
     writeProjectFile(targetFile : string, content : string, settings: KsProjectGeneratorSettings);
     getTemplateContent(templateFile : string) : string;
     copyToProjectFolder(templateFile : string, destinationProjectFile: string, settings: KsProjectGeneratorSettings);
+    getLanguage() : string;
 }
 
 
@@ -49,6 +91,10 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
 
     abstract generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings): void;
     
+    getLanguage() : string {
+        return this.language;
+    }
+
     writeProjectFile(targetFile : string, content : string, settings: KsProjectGeneratorSettings) {
         fs.writeFileSync(settings.outDir + '/' + settings.projectName + '/' + targetFile, content, "utf8" );
     }
@@ -70,6 +116,11 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
             return;
         }
         fs.createReadStream(sourceFile).pipe(fs.createWriteStream(targetFile));        
+    }
+
+    protected templateFileExists(templateFile : string, settings: KsProjectGeneratorSettings) : boolean {
+        let sourceFile = './project_templates/' + this.language + '/' + templateFile;
+        return fs.existsSync(sourceFile);
     }
     
     protected findStartupCase(ks:Kottbullescript) : KsCase {        
@@ -117,8 +168,8 @@ export class KsProjectCodeGeneratorProvider {
     
     codeGenerators: CodeGeneratorLanguagePair[] = [];
 
-    register(language : string, generator: IKsProjectCodeGenerator) {
-        this.codeGenerators.push(new CodeGeneratorLanguagePair(language, generator));
+    register(generator: IKsProjectCodeGenerator) {
+        this.codeGenerators.push(new CodeGeneratorLanguagePair(generator.getLanguage(), generator));
     }
 
     get(language: string) : IKsProjectCodeGenerator {

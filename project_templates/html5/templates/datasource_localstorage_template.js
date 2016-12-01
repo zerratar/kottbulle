@@ -11,7 +11,7 @@ function storageAvailable(type) {
 	}
 }
 
-class $datasourceName$ {
+class $datasourceName$ {    
     constructor() {
         if (!storageAvailable('localStorage')) {
             throw new Error("localStorage is unavailable. Please use a different datasource");
@@ -27,7 +27,7 @@ class $datasourceName$ {
         return $instanceReference$;
     }
     store(item) {        
-        if (this.isDebug === $debug$) {
+        if (this.isDebug) {
             alert(item + " stored");
         }        
         this.storage.setItem(itemIndex++, item);

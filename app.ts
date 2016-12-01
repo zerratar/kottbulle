@@ -1,10 +1,14 @@
 import { Kottbullescript as KS } from './ks/kottbullescript';
-import { KsProjectGenerator, KsProjectCodeGeneratorProvider } from './generator/ksprojectgenerator';
-import { Html5CodeGenerator } from './generator_extensions/html5';
-import { TypescriptCodeGenerator } from './generator_extensions/typescript';
+
 import { KsProjectTemplateProvider } from './generator/ksprojecttemplateprovider';
 import { KsProjectGeneratorSettings } from './generator/ksprojectgeneratorsettings';
 import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/definitions';
+import { KsProjectGenerator, KsProjectCodeGeneratorProvider } from './generator/ksprojectgenerator';
+
+import { VueCodeGenerator } from './generator_extensions/vue';
+import { Html5CodeGenerator } from './generator_extensions/html5';
+import { CsharpCodeGenerator } from './generator_extensions/csharp';
+import { TypescriptCodeGenerator } from './generator_extensions/typescript';
 
 let verbose : boolean = false;
 
@@ -12,21 +16,23 @@ let verbose : boolean = false;
     Load our awesome user signup script
  */
 
-let script = KS.loadFile(`./scripts/usersignup.ks`);
-// let script = KS.loadFile(`./scripts/html5_hello_world.ks`);
+// let script = KS.loadFile(`./scripts/usersignup.html5.ks`);
+let script = KS.loadFile(`./scripts/usersignup.vue.ks`);
 
 /*
     setup and generate our project based on the user signup script
  */
 
 let codeGeneratorProvider = new KsProjectCodeGeneratorProvider();
-codeGeneratorProvider.register("typescript", new TypescriptCodeGenerator());
-codeGeneratorProvider.register("html5", new Html5CodeGenerator());
+codeGeneratorProvider.register(new VueCodeGenerator());
+codeGeneratorProvider.register(new Html5CodeGenerator());
+codeGeneratorProvider.register(new CsharpCodeGenerator());
+codeGeneratorProvider.register(new TypescriptCodeGenerator());
 
 
 let templateProvider = new KsProjectTemplateProvider();
 let generator        = new KsProjectGenerator(codeGeneratorProvider, templateProvider);
-let projectSettings  = new KsProjectGeneratorSettings("./out/", "My first Html 5 project");
+let projectSettings  = new KsProjectGeneratorSettings("./out/", script.getApp().appName.toLowerCase());
 
 generator.generate(script, projectSettings);
 
