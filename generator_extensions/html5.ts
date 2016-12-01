@@ -3,7 +3,7 @@ import fs   = require('fs');
 import path = require('path');
 import { Kottbullescript } from './../ks/kottbullescript';
 import { KsProjectTemplate } from './../generator/ksprojecttemplate';
-import { IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from './../generator/ksprojectgenerator';
+import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from './../generator/ksprojectgenerator';
 import { KsProjectTemplateProvider } from './../generator/ksprojecttemplateprovider';
 import { KsProjectGeneratorSettings } from './../generator/ksprojectgeneratorsettings';
 import { KsForm, KsType,KsFieldReference, KsDatasource,KsState, KsField, KsCase, KsArgument, KsCaseBody, KsPrintOperation, KsCreateOperation, KsStoreOperation, KsCaseBodyOperation } from './../ks/definitions';
@@ -17,38 +17,6 @@ class NavigationLink {
     }
 }
 
-class FormElement {
-    tag         : string = "";
-    type        : string = "";
-    placeholder : string = "";
-    innerHtml   : string = "";    
-}
-
-class EventHandler {
-    reference : string;
-    caseName  : string;
-    eventName : string;    
-    eventHandler : string;
-    constructor (reference : string, caseName : string, eventName : string, eventHandler : string) {
-        this.reference    = reference;
-        this.caseName     = caseName;
-        this.eventName    = eventName;
-        this.eventHandler = eventHandler;        
-    }
-}
-
-class ProjectGeneratorContext {
-    settings : KsProjectGeneratorSettings;
-    script   : Kottbullescript;
-    private eventHandlers : EventHandler[] = []; 
-    addEventHandler(reference : string, caseName : string, eventName : string, eventHandler : string) {
-        this.eventHandlers.push(new EventHandler(reference, caseName, eventName, eventHandler));
-    }
-    getEventHandlers() : EventHandler[] {
-        return this.eventHandlers;
-    }
-}
-
 export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
     
     constructor() {
@@ -58,9 +26,7 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
     generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {
         // this.copyToProjectFolder()
         console.log("Generating html5 project code... ");
-        let ctx = new ProjectGeneratorContext();
-        ctx.settings = settings;
-        ctx.script   = ks;
+        let ctx = new KsProjectGeneratorContext(ks, template, settings);
         let app = ks.getApp();
         if (!app) {
             throw new SyntaxError("PANIC!! No app defined, forgot something maybe?");
@@ -76,7 +42,7 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         
         let formsToExclude = this.generateFrontPage(ctx, startupCase);
 
-        this.generateForms(ctx, formsToExclude, startupCase, template);                        
+        this.generateForms(ctx, formsToExclude, startupCase);                        
 
         this.copyToProjectFolder('src/css/site.css', './src/css/site.css', settings);
 
@@ -85,7 +51,7 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         console.log("... And we're done!");
     }
 
-    private generateSiteScript(ctx : ProjectGeneratorContext) : string {
+    private generateSiteScript(ctx : KsProjectGeneratorContext) : string {
         let sitejs        = "";        
         let types         = ctx.script.getTypes();
         let states        = ctx.script.getStates();
@@ -105,9 +71,8 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
             let c      = ctx.script.getCase(handler.caseName);
             let doBody = c.getDo();
 
-            let scriptFunction = this.getTemplateContent('/templates/event_template.js');
-            sitejs += scriptFunction.split("$eventHandlerName$").join(handler.eventHandler)
-                                    .split("$eventHandlerBody$").join(this.generateEventScriptBodyFromDo(doBody, ctx));
+            sitejs += this.templateProcessor.process('/templates/event_template.js', 
+            { "event":handler, "$eventHandlerName$": handler.eventHandler, "$eventHandlerBody$": this.generateEventScriptBodyFromDo(doBody, ctx) });
         }
         return sitejs;
     }
@@ -116,28 +81,8 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         let type = datasource.getValue("type");
         let name = datasource.datasourceName;
         let t    = datasource.datasourceType;
-        // TODO(Kalle): implement 
-        // switch(type) {
-        //     // internally predefined ones 
-        //     case "memory": 
-        //     break;
-        //     case "fs":
-        //     case "filesystem": 
-        //         {
-        //             let collectionFolder = datasource.getValue("source");                    
-        //         }
-        //     break;
-        //     default: 
-        //     break;
-        // }
-        let v   = this.getWindowRef(this.getVariableName(name, "instance"));
-        let src = this.getTemplateContent('/templates/datasource_' + type + '_template.js');
-        for (var value of datasource.values) {            
-            src = src.split(`$` + value.fieldName + `$`).join(value.fieldValue);
-        }
-
-        return src.split("$datasourceName$").join(name)
-                  .split("$instanceReference$").join(v);                          
+        let v   = this.getWindowRef(this.getVariableName(name, "instance"));        
+        return this.templateProcessor.process('/templates/datasource_' + type + '_template.js', { "datasource":datasource, "$datasourceName$": name, "$instanceReference$": v });        
     }
 
     private getTypeClassScript(type:KsType) : string {
@@ -157,11 +102,11 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         { "state": type, "$className$": type.stateName, "$baseType$": type.stateType, "$parameters$": argString, "$fields$": construct, "$overrides$":overrides });        
     }
 
-    private generateEventScriptBodyFromDo(doBody:KsCaseBody, ctx:ProjectGeneratorContext) : string {        
+    private generateEventScriptBodyFromDo(doBody:KsCaseBody, ctx:KsProjectGeneratorContext) : string {        
         return doBody.operations.map( (op : KsCaseBodyOperation) => this.getOperationScript(op,ctx)).join("\n    ");
     }
 
-    private getOperationScript(op : KsCaseBodyOperation, ctx:ProjectGeneratorContext) : string {
+    private getOperationScript(op : KsCaseBodyOperation, ctx:KsProjectGeneratorContext) : string {
         if (op instanceof KsPrintOperation) {
             let print = op as KsPrintOperation;
             if (print.byRef) {
@@ -205,7 +150,7 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
     private getWindowRef(ref:string) : string {
         return `window["`+ref+`"]`;
     }
-    private getCreateArgumentsString(create:KsCreateOperation, ctx:ProjectGeneratorContext) {
+    private getCreateArgumentsString(create:KsCreateOperation, ctx: KsProjectGeneratorContext) {
         return create.args.map((arg:KsArgument) => arg.isRef ? `"` + arg.value + `"` : 
                 this.getReferenceAccessScript(arg.value, create.caseName, ctx)
             ).join(", ");
@@ -219,7 +164,7 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         return caseName + `_` + varName;
     }
 
-    private getReferenceAccessScript(varName:string, thisCaseName:string, ctx: ProjectGeneratorContext) : string {
+    private getReferenceAccessScript(varName:string, thisCaseName:string, ctx: KsProjectGeneratorContext) : string {
         // try and locate the variable and then return the generated one. Most likely going to be window access
         // unless form, then we want to access the document element
         if (varName.includes(".")) {
@@ -244,10 +189,9 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         return varName;
     }
 
-    private generateForms(ctx : ProjectGeneratorContext,
+    private generateForms(ctx : KsProjectGeneratorContext,
                           exclude : string[],                                                    
-                          startup : KsCase,
-                          template: KsProjectTemplate) { 
+                          startup : KsCase) { 
         
         let ks  = ctx.script;
         let app = ks.getApp();
@@ -290,7 +234,7 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         return links;
     }
  
-    private generateFrontPage(ctx : ProjectGeneratorContext, startupCase : KsCase): string[] {                
+    private generateFrontPage(ctx : KsProjectGeneratorContext, startupCase : KsCase): string[] {                
         let formsToExclude : string[] = [];
         let ks    = ctx.script;
         let app   = ks.getApp();                
@@ -309,15 +253,11 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
                          formsToExclude.push(formRef);
                      }
                 }
-            }
-                        
+            }                        
         }
                 
         let navigationLinks   = this.getNavigationLinks(forms, formsToExclude);
-        let navigationContent = this.generateNavigationContent(navigationLinks);  
-
-        // NOTE(Kalle): templateFileProcessor is needed here
-        //              but to keep it simple-dimple, we will just do simple replace        
+        let navigationContent = this.generateNavigationContent(navigationLinks);     
         let pageContent = this.generatePageContent(app.meta.getValue("title"), navigationContent + whenContent);
         
         this.writeProjectFile('./src/index.html', pageContent, ctx.settings);
@@ -325,11 +265,11 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
     }    
 
     private generatePageContent(title : string, body : string) : string {        
-        return this.templateProcessor.process('/templates/page_template.html', { "{{app.meta.title}}": title, "{{content}}": body }); 
+        return this.templateProcessor.process('/templates/page_template.html', { "$appTitle$": title, "$content$": body }); 
     }
 
-    private generateFormContent(ctx : ProjectGeneratorContext, form : KsForm, cases: KsCase[]): string {
-        let fields = ``;
+    private generateFormContent(ctx : KsProjectGeneratorContext, form : KsForm, cases: KsCase[]): string {
+        let fields = [];
         for(var field of form.fields) { 
             let elmEvents = field.getEventsFromCases(form.formName, cases);
             let elmType   = this.getElementByFieldType(field.fieldType);
@@ -354,8 +294,8 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
                 }
             }
 
-            elm += `>`+elmType.innerHtml+`</` + elmType.tag + `>`; // NOTE(Kalle): most would be satisfied with /> as ending. but to be safe
-            fields += elm + `<br/>\n`;
+            elm += `>`+elmType.content+`</` + elmType.tag + `>`; // NOTE(Kalle): most would be satisfied with /> as ending. but to be safe
+            fields.push(elm);
         }
 
         let formEvents = form.getEventsFromCases(cases);
@@ -373,11 +313,11 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         return `
         <form name="`+ form.formName +`" id="`+ form.formName +`"` + formEventsString + `>
 {{fields}}
-        </form>`.replace("{{fields}}", fields);
+        </form>`.replace("{{fields}}", fields.join(`<br/>\n`));
     }
 
-    private getElementByFieldType(fieldType : string) : FormElement {
-        let elm = new FormElement();
+    private getElementByFieldType(fieldType : string) : KsFormElement {
+        let elm = new KsFormElement();
         if (fieldType.startsWith("input")) {
             elm.tag = "input";            
             if (fieldType.endsWith("password")) {
@@ -401,7 +341,7 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         }
         else {
             elm.tag = "div";
-            elm.innerHtml = "unsupported input for type: " + fieldType;
+            elm.content = "unsupported input for type: " + fieldType;
         }
         return elm;
     }

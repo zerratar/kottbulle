@@ -1,0 +1,7 @@
+<template>
+    <div class="<%= model.component.name %>">
+    <% for(let i = 0; i < model.components.length; i++) { %>
+        <<%= model.components[i].tag %>></<%= model.components[i].tag %>>
+    <% } %>
+    </div>
+</template>

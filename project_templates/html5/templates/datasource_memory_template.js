@@ -10,7 +10,7 @@ class $datasourceName$ {
         return $instanceReference$;
     }
     store(item) {
-        if (this.isDebug === $debug$) {
+        if (this.isDebug) {
             alert(item + " stored");
         }
         this.items.push(item);
