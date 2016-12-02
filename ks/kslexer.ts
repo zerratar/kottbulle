@@ -5,9 +5,11 @@ class KsLexerContext {
 export class KsToken {
     value : string;
     type  : string;
-    constructor(value: string, type: string) {
+    line  : number;
+    constructor(value: string, type: string, line: number = 0) {
         this.value = value;
         this.type  = type;
+        this.line  = line;
     }
 }
 
@@ -48,6 +50,8 @@ export class KsLexer {
         let token:     string = source[ctx.position];
         let value:     string = null;
         let nextToken: string = null;
+        
+        let line = this.getCurrentLine(source, ctx.position);
 
         if (!this.isEndOfSource(source, ctx.position+1)) {
             nextToken = source[ctx.position+1];
@@ -65,37 +69,47 @@ export class KsLexer {
             break;
             case ".":                 
                 ctx.position++;
-                return new KsToken(token, "dot");                 
+                return new KsToken(token, "dot", line);                 
             case ",":
                 ctx.position++;
-                return new KsToken(token, "comma");            
+                return new KsToken(token, "comma", line);            
             case ";":                             
                 ctx.position++;
-                return new KsToken(token, "semicolon");            
+                return new KsToken(token, "semicolon", line);            
             case ":":                 
                 ctx.position++;
-                return new KsToken(token, "colon");                                                     
+                return new KsToken(token, "colon", line);                                                     
             case "{":
             case "}": 
                 ctx.position++;
-                return new KsToken(token, "curlybracket");
+                return new KsToken(token, "curlybracket", line);
             case "[":            
             case "]": 
                 ctx.position++;
-                return new KsToken(token, "bracket");
+                return new KsToken(token, "bracket", line);
             case "(":
             case ")": 
                 ctx.position++;
-                return new KsToken(token, "parens");                                            
+                return new KsToken(token, "parens", line);                                            
             case '"':
             case "'":                 
-                return this.readString(token, source, ctx);
+                return this.readString(token, source, ctx, line);
             default:
                 // loop all acceptable literal values                
-                return this.readLiteral(token, source, ctx);                                                
+                return this.readLiteral(token, source, ctx, line);                                                
         }
         
         return null;
+    }
+
+    private getCurrentLine(source: string, position: number): number {
+        let lines = 0;
+        for(let i = 0; i < position; i++) {
+            if (source[i] === "\n") {
+                lines++;
+            }
+        }
+        return lines;
     }
 
     private readSingleLineComment(token: string, source: string, ctx: KsLexerContext) : KsToken {
@@ -127,31 +141,31 @@ export class KsLexer {
         return new KsToken(comment, "comment");                   
     }
 
-    private readString(token: string, source: string, ctx: KsLexerContext) : KsToken {
+    private readString(token: string, source: string, ctx: KsLexerContext, line: number) : KsToken {
         let str = "";
         do {
             let nextChar = source[++ctx.position];                        
             if (nextChar === token) {
                 ctx.position++;
-                return new KsToken(str, "string"); 
+                return new KsToken(str, "string", line); 
             }
             str += nextChar;      
         } while (ctx.position < source.length);  
-        return new KsToken(str, "string");
+        return new KsToken(str, "string", line);
     }
 
-    private readLiteral(token: string, source: string, ctx: KsLexerContext) : KsToken {
+    private readLiteral(token: string, source: string, ctx: KsLexerContext, line: number) : KsToken {
         let str = token;
         if(ctx.position + 1 < source.length) {
             do {                        
                 let nextChar = source[++ctx.position];                        
                 if (!this.isAcceptableLiteral(nextChar)) {
-                    return new KsToken(str, "literal"); 
+                    return new KsToken(str, "literal", line); 
                 }
                 str += nextChar;      
             } while (ctx.position < source.length);
         }                    
-        return new KsToken(str, "literal");
+        return new KsToken(str, "literal", line);
     }
 
     private isAcceptableLiteral(char:string): boolean {

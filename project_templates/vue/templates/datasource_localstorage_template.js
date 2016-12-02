@@ -17,7 +17,7 @@ export class $datasourceName$ {
             throw new Error("localStorage is unavailable. Please use a different datasource");
         }
         this.itemIndex = 0;           
-        this.isDebug = $debug$;     
+        this.isDebug = true;     
         this.storage = window['localStorage'];
     }
     static getInstance() {     
@@ -30,7 +30,7 @@ export class $datasourceName$ {
         if (this.isDebug) {
             alert(item + " stored");
         }        
-        this.storage.setItem(itemIndex++, item);
+        this.storage.setItem(this.itemIndex++, item);
     }
     load(index) {
         return this.storage.getItem(index);

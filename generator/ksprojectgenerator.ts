@@ -5,6 +5,7 @@ import { Kottbullescript } from './../ks/kottbullescript';
 import { KsProjectTemplate } from './ksprojecttemplate';
 import { KsProjectTemplateProvider } from './ksprojecttemplateprovider';
 import { KsProjectGeneratorSettings } from './ksprojectgeneratorsettings';
+import { KsProjectTemplateProcessor } from './ksprojecttemplateprocessor';
 import { KsCase, KsCaseBody, KsCaseBodyOperation, KsEventOperation } from './../ks/definitions';
 
 class CodeGeneratorLanguagePair {
@@ -16,6 +17,54 @@ class CodeGeneratorLanguagePair {
     }
 }
 
+export class KsFormElement {
+    tag         : string = "";
+    type        : string = "";
+    placeholder : string = "";
+    content   : string = "";    
+}
+
+export class KsEventHandler {
+    reference : string;
+    caseName  : string;
+    eventName : string;    
+    eventHandler     : string;
+    eventHandlerCode : string[] = [];
+    constructor (reference : string, caseName : string, eventName : string, eventHandler : string) {
+        this.reference    = reference;
+        this.caseName     = caseName;
+        this.eventName    = eventName;
+        this.eventHandler = eventHandler;        
+    }
+}
+
+export class KsProjectGeneratorContext {
+    settings : KsProjectGeneratorSettings;
+    template : KsProjectTemplate;
+    script   : Kottbullescript;
+    private eventHandlers : KsEventHandler[] = []; 
+    constructor(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {
+        this.script   = ks;
+        this.template = template;
+        this.settings = settings;
+    }
+    
+    addEventHandler(reference : string, caseName : string, eventName : string, eventHandler : string) {
+        this.eventHandlers.push(new KsEventHandler(reference, caseName, eventName, eventHandler));
+    }
+
+    addEventHandlerRef(handler : KsEventHandler) {
+        this.eventHandlers.push(handler);
+    }
+
+    getEventHandlers() : KsEventHandler[] {
+        return this.eventHandlers;
+    }
+    getEventHandler(eventHandlerName : string) : KsEventHandler {
+        return this.eventHandlers.find((ev:KsEventHandler) => ev.eventHandler === eventHandlerName);
+    }
+}
+
 /**
  * A contract for generating project code
  * 
@@ -24,6 +73,10 @@ class CodeGeneratorLanguagePair {
  */
 export interface IKsProjectCodeGenerator {
     generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings): void;
+    writeProjectFile(targetFile : string, content : string, settings: KsProjectGeneratorSettings);
+    getTemplateContent(templateFile : string) : string;
+    copyToProjectFolder(templateFile : string, destinationProjectFile: string, settings: KsProjectGeneratorSettings);
+    getLanguage() : string;
 }
 
 
@@ -36,18 +89,24 @@ export interface IKsProjectCodeGenerator {
  * @implements {IKsProjectCodeGenerator}
  */
 export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenerator {
-    protected language : string;
+    protected language          : string;
+    protected templateProcessor : KsProjectTemplateProcessor; 
     constructor (language : string){
-        this.language = language;
+        this.language          = language;
+        this.templateProcessor = new KsProjectTemplateProcessor(this); 
     }
 
     abstract generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings): void;
     
-    protected writeProjectFile(targetFile : string, content : string, settings: KsProjectGeneratorSettings) {
+    getLanguage() : string {
+        return this.language;
+    }
+
+    writeProjectFile(targetFile : string, content : string, settings: KsProjectGeneratorSettings) {
         fs.writeFileSync(settings.outDir + '/' + settings.projectName + '/' + targetFile, content, "utf8" );
     }
 
-    protected getTemplateContent(templateFile : string) : string {
+    getTemplateContent(templateFile : string) : string {
         let sourceFile = './project_templates/' + this.language + '/' + templateFile;
         if (!fs.existsSync(sourceFile)) {
             console.warn("The expected template file '" + sourceFile + "' could not be found.");
@@ -56,7 +115,7 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
         return fs.readFileSync(sourceFile, 'utf8');
     }
 
-    protected copyToProjectFolder(templateFile : string, destinationProjectFile: string, settings: KsProjectGeneratorSettings) {                
+    copyToProjectFolder(templateFile : string, destinationProjectFile: string, settings: KsProjectGeneratorSettings) {                
         let targetFile = settings.outDir + "/" + settings.projectName + "/" + destinationProjectFile;
         let sourceFile = './project_templates/' + this.language + '/' + templateFile;
         if (!fs.existsSync(sourceFile)) {
@@ -64,6 +123,11 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
             return;
         }
         fs.createReadStream(sourceFile).pipe(fs.createWriteStream(targetFile));        
+    }
+
+    protected templateFileExists(templateFile : string, settings: KsProjectGeneratorSettings) : boolean {
+        let sourceFile = './project_templates/' + this.language + '/' + templateFile;
+        return fs.existsSync(sourceFile);
     }
     
     protected findStartupCase(ks:Kottbullescript) : KsCase {        
@@ -111,8 +175,8 @@ export class KsProjectCodeGeneratorProvider {
     
     codeGenerators: CodeGeneratorLanguagePair[] = [];
 
-    register(language : string, generator: IKsProjectCodeGenerator) {
-        this.codeGenerators.push(new CodeGeneratorLanguagePair(language, generator));
+    register(generator: IKsProjectCodeGenerator) {
+        this.codeGenerators.push(new CodeGeneratorLanguagePair(generator.getLanguage(), generator));
     }
 
     get(language: string) : IKsProjectCodeGenerator {
