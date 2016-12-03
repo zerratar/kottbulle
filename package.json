@@ -18,5 +18,8 @@
   "homepage": "https://github.com/zerratar/kottbulle#readme",
   "dependencies": {
     "file-system": "^2.2.2"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
   }
 }

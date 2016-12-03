@@ -40,7 +40,7 @@ define case UserSignup {
 
 define app MyApp {
     meta {
-        set title "My awesome app"
+        set title "Awesomenezz"
         set description "My awesome app, that allows anyone. Even doges to register as a user!"
         set version "0.0.1"
         set author "kaaruschmidt"
