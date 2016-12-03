@@ -13,13 +13,11 @@ export default {
         console.log('<%= model.name %> created')
     },
     methods: {
-        <% for(let j = 0; j < model.component.events.length; j++) { %>
+      <% for(let j = 0; j < model.component.events.length; j++) { %>
         <%= model.component.events[j].eventHandler %>() {
-            <% for(let i = 0; i < model.component.events[j].eventHandlerCode.length; i++) { %>
-                <%= model.component.events[j].eventHandlerCode[i] %>
-            <% } %>
-        },
-        <% } %>
+          <% for(let i = 0; i < model.component.events[j].eventHandlerCode.length; i++) { %>
+            <%= model.component.events[j].eventHandlerCode[i] %>
+        <% } %>},<% } %>
     },
     components: {
       <%= model.components.map(function(c) {
@@ -28,6 +26,3 @@ export default {
       %>
     }
 }
-
-
-
