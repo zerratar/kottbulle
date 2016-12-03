@@ -1,7 +1,7 @@
 export class $datasourceName$ {    
     constructor() {
         this.items   = [];
-        this.isDebug = $debug$;
+        this.isDebug = true;
     }
     static getInstance() {     
         if(!$instanceReference$ || $instanceReference$ === undefined || $instanceReference$ === null) { 

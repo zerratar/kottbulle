@@ -36,12 +36,44 @@ export class KsProjectTemplateProcessor {
         let template = new KsDynamicTemplate();
         let ctx      = new KsDynamicTemplateContext();
         while (ctx.pos < tokens.length) {
+            this.trimNodes(tokens[ctx.pos], tokens, ctx);
+        }
+        ctx.pos = 0;
+        while (ctx.pos < tokens.length) {
             let node = this.walkToken(tokens[ctx.pos], tokens, ctx);
             if (node && node !== undefined) {
                 template.nodes.push(node);
             }
         }
         return template;
+    }
+
+    private trimNodes(token:KsToken, tokens:KsToken[], ctx:KsDynamicTemplateContext) {   
+        // --- this function will trim any lines introduces thanks to the template scripts
+        // if the script token is taking up a whole line by itself, then the newline \n should be removed        
+        if (token.type.includes("script") && !token.value.includes("<%=")) { // no inline scripts
+            // token.line
+            let leftOk = false;
+            if (ctx.pos - 1 >= 0) {
+                let prev    = tokens[ctx.pos-1];                
+                let prevVal = this.trimRight(prev.value);// prev.value.replace(/^\s+|\s+$/g,'');
+                if (!prev.type.includes("script") && prevVal.endsWith("\n")) {
+                    leftOk = true;
+                }
+            } 
+            if (leftOk && ctx.pos + 1 < tokens.length) {
+                let next      = tokens[ctx.pos + 1];
+                let nextValue = next.value;
+                if (next.line !== token.line) {
+                    if (nextValue.startsWith("\r\n") || nextValue.startsWith("\n")) {
+                        // tokens[ctx.pos+1].value = nextValue.replace("\r\n","");
+                        let prev   = tokens[ctx.pos-1];                 
+                        tokens[ctx.pos-1].value = this.trimRight(prev.value, true);
+                    }
+                }
+            }
+        }
+        ctx.pos++;   
     }
 
     // TODO(Kalle): remove hierarchy so we don't need to know whether a script is start or not and just 
@@ -63,8 +95,36 @@ export class KsProjectTemplateProcessor {
         //     }                     
         // }
 
-        ctx.pos++;
+
+
+        ctx.pos++;    
         return node;
+    }
+
+    private trimRight(s : string, trimNewLine: boolean = false) : string {        
+        let whitespaceEnd = -1;
+        let len           = s.length;
+        for (let i = len-1; i > 0; i--) {            
+            if (trimNewLine) {
+                if (s[i] !== " " && s[i] !== "\n") {
+                    whitespaceEnd = i;
+                    break;
+                }
+            } else {
+                if(s[i] !== " ") {
+                    whitespaceEnd = i;
+                    break;
+                }
+            }
+        }
+        if (whitespaceEnd !== -1) {
+            let v = s.substring(0,whitespaceEnd+1);
+            if (v.endsWith("\r") && trimNewLine) {
+                return v.substring(0,v.length-1);
+            }
+            return v;
+        }
+        return s;
     }
 
     private tokenize(template : string) : KsToken[] {
@@ -72,14 +132,15 @@ export class KsProjectTemplateProcessor {
         let tokens : KsToken[] = [];
         let currentValue = "";        
         while (pos < template.length) {
-            let char = template[pos];             
+            let char = template[pos];                        
+            let line = this.getCurrentLine(template, pos);         
             switch(char) {
                 case "<": 
                     {
                         if (pos + 2 <template.length && template[pos+1] === "%"){
                             let isInlineScript = template[pos+2] === "=";
                             if (currentValue.length > 0) {
-                                tokens.push(new KsToken(currentValue, "template"));
+                                tokens.push(new KsToken(currentValue, "template", line));
                                 currentValue = "";
                             }                            
                             pos++;
@@ -106,10 +167,10 @@ export class KsProjectTemplateProcessor {
                                                     
                             pos++;  
                             if (isInlineScript) {
-                                tokens.push(new KsToken(currentValue, "script"));
+                                tokens.push(new KsToken(currentValue, "script", line));
                             } else {              
                                 // TODO(Kalle): make it more script aware so we can get <% } else { %> working         
-                                tokens.push(new KsToken(currentValue, "script_" + (body.trim() === "}" ? "end" : "start") ));
+                                tokens.push(new KsToken(currentValue, "script_" + (body.trim() === "}" ? "end" : "start"), line));
                             }
                             currentValue = "";
                             continue;                             
@@ -122,9 +183,40 @@ export class KsProjectTemplateProcessor {
             }
         }
         if ( currentValue.length > 0 ){
-            tokens.push(new KsToken(currentValue, "template"));
+            let line = this.getCurrentLine(template, pos);   
+            tokens.push(new KsToken(currentValue, "template", line));
         }
         return tokens;
+    }
+
+    private getCurrentLine(source: string, position: number): number {
+        // NOTE(Kalle): We need to take account for script rows, those should not be counted.         
+        let lines    = 0;
+        let inScript = false;
+        for(let i = 0; i <= position; i++) {
+            if (source[i] === "<" && !inScript) {
+                if (i + 1 < source.length) {
+                    if(source[i+1] === "%") {
+                        inScript = true;
+                        i++;
+                        continue;
+                    }
+                }                
+            }
+            if (source[i] === "%" && inScript) {
+                if (i + 1 < source.length) {
+                    if(source[i+1] === ">") {
+                        inScript = false;
+                        i++;
+                        continue;
+                    }
+                }                
+            }            
+            if (source[i] === "\n" && !inScript) {
+                lines++;
+            }
+        }
+        return lines;
     }
 
     private generate(template : KsDynamicTemplate, model : any) : string {        

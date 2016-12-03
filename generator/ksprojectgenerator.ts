@@ -28,7 +28,8 @@ export class KsEventHandler {
     reference : string;
     caseName  : string;
     eventName : string;    
-    eventHandler : string;
+    eventHandler     : string;
+    eventHandlerCode : string[] = [];
     constructor (reference : string, caseName : string, eventName : string, eventHandler : string) {
         this.reference    = reference;
         this.caseName     = caseName;
@@ -36,8 +37,6 @@ export class KsEventHandler {
         this.eventHandler = eventHandler;        
     }
 }
-
-
 
 export class KsProjectGeneratorContext {
     settings : KsProjectGeneratorSettings;
@@ -53,8 +52,16 @@ export class KsProjectGeneratorContext {
     addEventHandler(reference : string, caseName : string, eventName : string, eventHandler : string) {
         this.eventHandlers.push(new KsEventHandler(reference, caseName, eventName, eventHandler));
     }
+
+    addEventHandlerRef(handler : KsEventHandler) {
+        this.eventHandlers.push(handler);
+    }
+
     getEventHandlers() : KsEventHandler[] {
         return this.eventHandlers;
+    }
+    getEventHandler(eventHandlerName : string) : KsEventHandler {
+        return this.eventHandlers.find((ev:KsEventHandler) => ev.eventHandler === eventHandlerName);
     }
 }
 
