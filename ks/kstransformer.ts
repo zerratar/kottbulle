@@ -1,4 +1,4 @@
-import { KsAppNode, KsTypeNode, KsFormNode, KsDatasourceNode, KsLiteralNode, KsFieldNode, KsStateNode, KsCaseNode, KsCaseBodyNode, KsEventNode, KsCreateNode, KsStateFieldSetNode, KsStoreNode, KsPrintNode } from './nodes/ksnodes';
+import { KsAppNode, KsTypeNode, KsFormNode, KsDatasourceNode, KsLiteralNode, KsLoadNode, KsFieldNode, KsStateNode, KsCaseNode, KsCaseBodyNode, KsEventNode, KsCreateNode, KsStateFieldSetNode, KsStoreNode, KsPrintNode } from './nodes/ksnodes';
 import { KsToken } from './kslexer';
 import { KsAst, KsAstNode } from './ksast';
 
@@ -188,6 +188,7 @@ export class KsTransformer {
             case "create"   : this.walkCreate(ctx, nodes, node);        return;
             case "set"      : this.walkStateFieldSet(ctx, nodes, node); return;
             case "store"    : this.walkStore(ctx, nodes, node);         return;
+            case "load"     : this.walkLoad(ctx, nodes, node);          return;
             case "print"    : this.walkPrint(ctx, nodes, node);         return;
             case "transform": this.walkTransform(ctx, nodes, node);     return;
             case "nothing"  : case "none" : this.walkEmpty(ctx);        return;            
@@ -215,6 +216,31 @@ export class KsTransformer {
         }
 
         ctx.stack.push(new KsStoreNode(referenceNode.name, datasourceName));
+        ctx.position++;
+    }
+
+    private walkLoad(ctx: KsTransformerContext, nodes : KsAstNode[], node : KsAstNode) {
+        this.assertAvailableNodes(ctx, nodes, 3);        
+        // load <alias> from <datasource> [where (prop eq value)]
+        let aliasNode      = nodes[++ctx.position];
+        let datasourceName = "";
+        let where          = "";
+        if (nodes.length - ctx.position > 1 && nodes[ctx.position+1].name === "from") {
+            ctx.position++;
+            datasourceName = nodes[++ctx.position].name;
+            if (nodes.length - ctx.position > 1 && nodes[ctx.position+1].name === "where") {
+                ctx.position++;
+                let whereNode = nodes[++ctx.position];
+                if (whereNode) {
+                    console.log("we have a where, but we don't know how");
+                }
+            }
+        }
+        else {
+            throw new SyntaxError("Nopes! you cannot load stuff without specifying a datasource. You kinda missed the whole 'from <datasource>' part!")
+        }
+
+        ctx.stack.push(new KsLoadNode(aliasNode.name, datasourceName, where));
         ctx.position++;
     }
 

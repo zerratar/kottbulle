@@ -1,5 +1,5 @@
-import { KsLiteralNode,KsAppNode,KsTypeNode,KsFormNode, KsDatasourceNode, KsCaseNode, KsCaseBodyNode, KsStateNode, KsFieldNode, KsStateFieldSetNode, KsCreateNode, KsEventNode, KsStoreNode, KsPrintNode } from './nodes/ksnodes';
-import { KsAppMeta, KsApp, KsForm, KsDatasource, KsType, KsCase, KsCaseBody, KsCaseBodyOperation, KsCreateOperation, KsEventOperation, KsArgument ,KsState, KsField, KsFieldReference, KsStoreOperation, KsPrintOperation } from './definitions';
+import { KsLiteralNode, KsAppNode, KsTypeNode, KsFormNode, KsDatasourceNode, KsCaseNode, KsCaseBodyNode, KsStateNode, KsFieldNode, KsStateFieldSetNode, KsCreateNode, KsEventNode, KsStoreNode, KsLoadNode, KsPrintNode } from './nodes/ksnodes';
+import { KsAppMeta, KsApp, KsForm, KsDatasource, KsType, KsCase, KsCaseBody, KsCaseBodyOperation, KsCreateOperation, KsLoadOperation, KsEventOperation, KsArgument , KsState, KsField, KsFieldReference, KsStoreOperation, KsPrintOperation } from './definitions';
 import { KsProgramTree } from './ksprogramtree';
 import { KsTransformer } from './kstransformer';
 import { KsValidator } from './ksvalidator';
@@ -182,6 +182,11 @@ export class KsInterpreter {
                             if (caseBodyNode.children[k] instanceof KsStoreNode) {                                
                                 let storeNode = caseBodyNode.children[k] as KsStoreNode;
                                 caseBody.operations.push(new KsStoreOperation(caseNode.caseName, storeNode.reference, storeNode.datasource));
+                            }
+
+                            if (caseBodyNode.children[k] instanceof KsLoadNode) {
+                                let loadNode = caseBodyNode.children[k] as KsLoadNode;
+                                caseBody.operations.push(new KsLoadOperation(caseNode.caseName, loadNode.alias, loadNode.datasource, loadNode.where));                                
                             }
                             
                             if (caseBodyNode.children[k] instanceof KsPrintNode) {                                
