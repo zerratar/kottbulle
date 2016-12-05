@@ -212,6 +212,21 @@ export class KsStoreOperation extends KsCaseBodyOperation {
     }    
 }
 
+export class KsLoadOperation extends KsCaseBodyOperation {
+    alias      : string;
+    datasource : string;
+    where      : string;
+    constructor(caseName : string, alias : string, datasource : string, where : string) {
+        super("load", caseName);
+        this.alias      = alias;
+        this.datasource = datasource; 
+        this.where      = where;
+    }
+    getArguments() : string[] {
+        return [this.alias, this.datasource, this.where];
+    }    
+}
+
 export class KsCaseBody {
     bodyName   : string;    
     operations : KsCaseBodyOperation[] = [];

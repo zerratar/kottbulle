@@ -6,7 +6,7 @@ import { KsProjectTemplate } from './../generator/ksprojecttemplate';
 import { KsProjectTemplateProvider } from './../generator/ksprojecttemplateprovider';
 import { KsProjectGeneratorSettings } from './../generator/ksprojectgeneratorsettings';
 import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from './../generator/ksprojectgenerator';
-import { KsForm, KsType, KsEventOperation, KsFieldReference, KsDatasource,KsState, KsField, KsCase, KsArgument, KsCaseBody, KsPrintOperation, KsCreateOperation, KsStoreOperation, KsCaseBodyOperation } from './../ks/definitions';
+import { KsForm, KsType, KsEventOperation, KsFieldReference, KsDatasource,KsState, KsField, KsCase, KsArgument, KsCaseBody, KsLoadOperation, KsPrintOperation, KsCreateOperation, KsStoreOperation, KsCaseBodyOperation } from './../ks/definitions';
 
 class KsComponent {
     ctx            : KsProjectGeneratorContext;
@@ -45,7 +45,7 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
                                 + "Maybe in the future you won't but we have not implemented that shizzle yet. "
                                 + "Just define a case with nothing in it. It should be alright.");
         }
-
+ 
         this.generateMainJs(ctx);
         this.generateIndex(ctx, startupCase);
         this.generateModels(ctx);
@@ -180,6 +180,13 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
             }
             return "/* store " + store.reference + " in " + store.datasource + " */";
         }
+        if (op instanceof KsLoadOperation) {
+            let load = op as KsLoadOperation;
+            if (load.datasource && load.datasource.length > 0){
+
+            }
+            return "/* load " + load.alias + " from " + load.datasource + " where */"
+        }
         return "/* " + op.action  + " " + op.getArguments().join(", ") + " */";
     }
 
@@ -313,7 +320,7 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
             let componentView   = this.templateProcessor.process('/templates/component_template.html', model);
             let componentScript = this.templateProcessor.process('/templates/component_template.js', model);
             let componentStyle  = this.templateProcessor.process('/templates/component_template.css', model);
-            let componentVue    = this.templateProcessor.process('/templates/component_template.vue', {"$templateView$" : componentView, "$templateScript$" : componentScript, "$templateStyle$" : componentStyle});
+            let componentVue    = this.templateProcessor.process('/templates/component_template.vue', {"$templateView$" : componentView, "$templateScript$" : componentScript, "$templateStyle$" : componentStyle, "component": component});
             this.writeProjectFile('src/' + component.location, componentVue, component.ctx.settings);
         }
         // recursively generate the component

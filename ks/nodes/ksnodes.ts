@@ -52,6 +52,18 @@ export class KsStoreNode extends KsAstNode {
     } 
 }
 
+export class KsLoadNode extends KsAstNode {
+    alias      : string;
+    datasource : string;
+    where      : string;
+    constructor (alias : string, datasource : string, where : string) {
+        super("operation", "load");
+        this.alias      = alias;
+        this.datasource = datasource;
+        this.where      = where;
+    }
+}
+
 
 export class KsTypeNode extends KsAstNode {
     typeName : string;

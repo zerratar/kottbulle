@@ -4,6 +4,8 @@ $templateView$
 $templateScript$
 </script>
 
+<% if(!model.component.isForm) { %>
 <style>
 $templateStyle$
 </style>
+<% } %>

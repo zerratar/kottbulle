@@ -125,6 +125,18 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
         fs.createReadStream(sourceFile).pipe(fs.createWriteStream(targetFile));        
     }
 
+    protected copyFolderToProjectFolder(folder : string, destinationFolder: string, settings: KsProjectGeneratorSettings) {
+        let sourceFolder = './project_templates/' + this.language + '/' + folder;
+        let files = this.getFilesSync(sourceFolder);        
+        if (files && files.length > 0) {
+            for(var file of files) {
+                let filePaths  = file.split('/');
+                let fileName   = filePaths[filePaths.length-1];
+                let targetFile = settings.outDir + "/" + settings.projectName + "/" + destinationFolder + "/" + fileName;
+                fs.createReadStream(file).pipe(fs.createWriteStream(targetFile));                
+            }                        
+        }
+    }
     protected templateFileExists(templateFile : string, settings: KsProjectGeneratorSettings) : boolean {
         let sourceFile = './project_templates/' + this.language + '/' + templateFile;
         return fs.existsSync(sourceFile);
@@ -152,6 +164,9 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
         }
 
         return null;
+    }
+    private getFilesSync(srcpath : string) : string[] {
+        return fs.readdirSync(srcpath).filter((file : string) => fs.statSync(path.join(srcpath, file)).isFile()).map((f:string) => srcpath + '/' + f );
     }
 
     private willExecuteAutomatically(ks:Kottbullescript, op: KsCaseBodyOperation) : boolean {

@@ -2,8 +2,7 @@
     <<%= model.component.isForm ? "form" : "div" %>
      id="<%= model.component.name %>"
      name="<%= model.component.name %>"
-     class="<%= model.component.isForm ? '' : model.component.name %>"
-     <%= model.component.events.map(function(e) { return '@' + ( (model.component.isForm && e.eventName) === "submit" ? "submit.prevent" : e.eventName) + '="' + e.eventHandler + '"' }).join(" ") %>>
+     <%= model.component.isForm ? '' : 'class="' + model.component.name + '"\r\n     ' %><%= model.component.events.map(function(e) { return '@' + ( (model.component.isForm && e.eventName) === "submit" ? "submit.prevent" : e.eventName) + '="' + e.eventHandler + '"' }).join(" ") %>>
     <% for(let i = 0; i < model.components.length; i++) { %>   <<%= model.components[i].tag %>></<%= model.components[i].tag %>>
     <% } %></<%= model.component.isForm ? "form" : "div" %>>
 </template>
