@@ -54,21 +54,9 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         this.generateModels(ctx);
         this.generateApp(ctx, startupCase);
         this.generatePackageJsonAndReadme(ctx);
-
-        // UUUUGLLY
-        this.copyToProjectFolder('build/build.js', './build/build.js', settings);
-        this.copyToProjectFolder('build/check-versions.js', './build/check-versions.js', settings);
-        this.copyToProjectFolder('build/dev-client.js', './build/dev-client.js', settings);
-        this.copyToProjectFolder('build/dev-server.js', './build/dev-server.js', settings);
-        this.copyToProjectFolder('build/utils.js', './build/utils.js', settings);
-        this.copyToProjectFolder('build/webpack.base.conf.js', './build/webpack.base.conf.js', settings);
-        this.copyToProjectFolder('build/webpack.dev.conf.js', './build/webpack.dev.conf.js', settings);
-        this.copyToProjectFolder('build/webpack.prod.conf.js', './build/webpack.prod.conf.js', settings);
-
-        this.copyToProjectFolder('config/dev.env.js', './config/dev.env.js', settings);
-        this.copyToProjectFolder('config/index.js', './config/index.js', settings);
-        this.copyToProjectFolder('config/prod.env.js', './config/prod.env.js', settings);
-        // END OF UGGGLY
+        
+        this.copyFolderToProjectFolder('build/', './build', settings);
+        this.copyFolderToProjectFolder('config/', './config', settings);        
 
         this.copyToProjectFolder('static/css/site.css', './static/css/site.css', settings);
 
