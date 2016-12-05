@@ -19,6 +19,11 @@ define case ListTodos {
     }
     do {
         load todos from TodoCollection
+        // list todo from todos
+        list todos
+    }
+    result {
+        nothing
     }
 }
 
