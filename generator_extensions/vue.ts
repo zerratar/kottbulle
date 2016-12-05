@@ -45,15 +45,31 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
                                 + "Maybe in the future you won't but we have not implemented that shizzle yet. "
                                 + "Just define a case with nothing in it. It should be alright.");
         }
- 
+
         this.generateMainJs(ctx);
+        this.generateStoreJs(ctx);
+        this.generateModulesJs(ctx);
+        this.generateRouterJs(ctx);
         this.generateIndex(ctx, startupCase);
         this.generateModels(ctx);
         this.generateApp(ctx, startupCase);
-
         this.generatePackageJsonAndReadme(ctx);
 
-        this.copyToProjectFolder('templates/webpack.config.js', './webpack.config.js', settings);
+        // UUUUGLLY
+        this.copyToProjectFolder('build/build.js', './build/build.js', settings);
+        this.copyToProjectFolder('build/check-versions.js', './build/check-versions.js', settings);
+        this.copyToProjectFolder('build/dev-client.js', './build/dev-client.js', settings);
+        this.copyToProjectFolder('build/dev-server.js', './build/dev-server.js', settings);
+        this.copyToProjectFolder('build/utils.js', './build/utils.js', settings);
+        this.copyToProjectFolder('build/webpack.base.conf.js', './build/webpack.base.conf.js', settings);
+        this.copyToProjectFolder('build/webpack.dev.conf.js', './build/webpack.dev.conf.js', settings);
+        this.copyToProjectFolder('build/webpack.prod.conf.js', './build/webpack.prod.conf.js', settings);
+
+        this.copyToProjectFolder('config/dev.env.js', './config/dev.env.js', settings);
+        this.copyToProjectFolder('config/index.js', './config/index.js', settings);
+        this.copyToProjectFolder('config/prod.env.js', './config/prod.env.js', settings);
+        // END OF UGGGLY
+
         this.copyToProjectFolder('static/css/site.css', './static/css/site.css', settings);
 
         //this.writeProjectFile('src/js/site.js', this.generateSiteScript(ctx), ctx.settings);
@@ -344,6 +360,36 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
         let indexContent = this.templateProcessor.process('/templates/main_template.js', model);
         this.writeProjectFile('src/main.js', indexContent, ctx.settings);
+    }
+
+    private generateStoreJs(ctx : KsProjectGeneratorContext) {
+        let ks    = ctx.script;
+        let app   = ks.getApp();
+        let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
+        let indexContent = this.templateProcessor.process('/templates/store_template.js', model);
+        this.writeProjectFile('src/store.js', indexContent, ctx.settings);
+    }
+
+    private generateModulesJs(ctx : KsProjectGeneratorContext) {
+        let ks    = ctx.script;
+        let app   = ks.getApp();
+        let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
+        let indexContent = this.templateProcessor.process('/templates/modules_index_template.js', model);
+        let modulesContent = this.templateProcessor.process('/templates/modules_template.js', model);
+
+        this.writeProjectFile('src/modules/index.js', indexContent, ctx.settings);
+
+        // TODO: This has to generate multiple store modules based on the number of
+        // top-level cases there are.
+        this.writeProjectFile('src/modules/myApp.js', modulesContent, ctx.settings);
+    }
+
+    private generateRouterJs(ctx : KsProjectGeneratorContext) {
+        let ks    = ctx.script;
+        let app   = ks.getApp();
+        let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
+        let indexContent = this.templateProcessor.process('/templates/router_template.js', model);
+        this.writeProjectFile('src/router.js', indexContent, ctx.settings);
     }
 
     private generateIndex(ctx : KsProjectGeneratorContext, startupCase : KsCase) {
