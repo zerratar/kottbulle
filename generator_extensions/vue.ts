@@ -45,7 +45,7 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
                                 + "Maybe in the future you won't but we have not implemented that shizzle yet. "
                                 + "Just define a case with nothing in it. It should be alright.");
         }
- 
+
         this.generateMainJs(ctx);
         this.generateStoreJs(ctx);
         this.generateModulesJs(ctx);
