@@ -3,11 +3,11 @@ import <%= model.components[i].name %> from './<%= model.components[i].location 
 <% } %>
 
 // tag: '<%= model.app.appName.toLowerCase() %>'
-export default {    
-    data: function() {
+export default {
+    data() {
         return {}
     },
-    created: function() {
+    created() {
         console.log('<%= model.app.appName %> created')
     },
     components: {
