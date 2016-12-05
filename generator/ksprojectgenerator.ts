@@ -1,12 +1,12 @@
 /// <reference path="../typings/node/node.d.ts" />
-import fs   = require('fs');
-import path = require('path');
-import { Kottbullescript } from './../ks/kottbullescript';
-import { KsProjectTemplate } from './ksprojecttemplate';
-import { KsProjectTemplateProvider } from './ksprojecttemplateprovider';
-import { KsProjectGeneratorSettings } from './ksprojectgeneratorsettings';
-import { KsProjectTemplateProcessor } from './ksprojecttemplateprocessor';
-import { KsCase, KsCaseBody, KsCaseBodyOperation, KsEventOperation } from './../ks/definitions';
+import fs   = require("fs");
+import path = require("path");
+import { Kottbullescript } from "./../ks/kottbullescript";
+import { KsProjectTemplate } from "./ksprojecttemplate";
+import { KsProjectTemplateProvider } from "./ksprojecttemplateprovider";
+import { KsProjectGeneratorSettings } from "./ksprojectgeneratorsettings";
+import { KsProjectTemplateProcessor } from "./ksprojecttemplateprocessor";
+import { KsCase, KsCaseBody, KsCaseBodyOperation, KsEventOperation } from "./../ks/definitions";
 
 class CodeGeneratorLanguagePair {
     language      : string;
@@ -21,7 +21,7 @@ export class KsFormElement {
     tag         : string = "";
     type        : string = "";
     placeholder : string = "";
-    content   : string = "";    
+    content   : string = "";
 }
 
 export class KsEventHandler {
@@ -34,7 +34,7 @@ export class KsEventHandler {
         this.reference    = reference;
         this.caseName     = caseName;
         this.eventName    = eventName;
-        this.eventHandler = eventHandler;        
+        this.eventHandler = eventHandler;
     }
 }
 
@@ -48,7 +48,7 @@ export class KsProjectGeneratorContext {
         this.template = template;
         this.settings = settings;
     }
-    
+
     addEventHandler(reference : string, caseName : string, eventName : string, eventHandler : string) {
         this.eventHandlers.push(new KsEventHandler(reference, caseName, eventName, eventHandler));
     }
@@ -76,7 +76,7 @@ export interface IKsProjectCodeGenerator {
     writeProjectFile(targetFile : string, content : string, settings: KsProjectGeneratorSettings);
     getTemplateContent(templateFile : string) : string;
     copyToProjectFolder(templateFile : string, destinationProjectFile: string, settings: KsProjectGeneratorSettings);
-    getLanguage() : string;
+    getLanguage(): string;
 }
 
 
@@ -97,54 +97,57 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
     }
 
     abstract generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings): void;
-    
+
     getLanguage() : string {
         return this.language;
     }
 
     writeProjectFile(targetFile : string, content : string, settings: KsProjectGeneratorSettings) {
-        fs.writeFileSync(settings.outDir + '/' + settings.projectName + '/' + targetFile, content, "utf8" );
+        fs.writeFileSync(settings.outDir + "/" + settings.projectName + "/" + targetFile, content, "utf8" );
     }
 
     getTemplateContent(templateFile : string) : string {
-        let sourceFile = './project_templates/' + this.language + '/' + templateFile;
+        let sourceFile = "./project_templates/" + this.language + "/" + templateFile;
         if (!fs.existsSync(sourceFile)) {
             console.warn("The expected template file '" + sourceFile + "' could not be found.");
             return;
         }
-        return fs.readFileSync(sourceFile, 'utf8');
+        return fs.readFileSync(sourceFile, "utf8");
     }
 
-    copyToProjectFolder(templateFile : string, destinationProjectFile: string, settings: KsProjectGeneratorSettings) {                
+    copyToProjectFolder(templateFile : string, destinationProjectFile: string, settings: KsProjectGeneratorSettings) {
         let targetFile = settings.outDir + "/" + settings.projectName + "/" + destinationProjectFile;
-        let sourceFile = './project_templates/' + this.language + '/' + templateFile;
+        let sourceFile = "./project_templates/" + this.language + "/" + templateFile;
         if (!fs.existsSync(sourceFile)) {
             console.warn("The expected template file '" + sourceFile + "' could not be found.");
             return;
         }
-        fs.createReadStream(sourceFile).pipe(fs.createWriteStream(targetFile));        
+        fs.createReadStream(sourceFile).pipe(fs.createWriteStream(targetFile));
     }
 
     protected copyFolderToProjectFolder(folder : string, destinationFolder: string, settings: KsProjectGeneratorSettings) {
-        let sourceFolder = './project_templates/' + this.language + '/' + folder;
-        let files = this.getFilesSync(sourceFolder);        
+        let sourceFolder = "./project_templates/" + this.language + "/" + folder;
+        let files = this.getFilesSync(sourceFolder);
         if (files && files.length > 0) {
             for(var file of files) {
-                let filePaths  = file.split('/');
+                let filePaths  = file.split("/");
                 let fileName   = filePaths[filePaths.length-1];
+                if (fileName === ".keep") {
+                    continue;
+                }
                 let targetFile = settings.outDir + "/" + settings.projectName + "/" + destinationFolder + "/" + fileName;
-                fs.createReadStream(file).pipe(fs.createWriteStream(targetFile));                
-            }                        
+                fs.createReadStream(file).pipe(fs.createWriteStream(targetFile));
+            }
         }
     }
-    protected templateFileExists(templateFile : string, settings: KsProjectGeneratorSettings) : boolean {
-        let sourceFile = './project_templates/' + this.language + '/' + templateFile;
+    protected templateFileExists(templateFile : string, settings: KsProjectGeneratorSettings): boolean {
+        let sourceFile : string = "./project_templates/" + this.language + "/" + templateFile;
         return fs.existsSync(sourceFile);
     }
-    
-    protected findStartupCase(ks:Kottbullescript) : KsCase {        
+
+    protected findStartupCase(ks:Kottbullescript) : KsCase {
         let app      = ks.getApp();
-        let allCases = ks.getCases();         
+        let allCases = ks.getCases();
         for(let caseName of app.cases) {
             let c = allCases.find((k : KsCase) => k.caseName == caseName);
             if (c) {
@@ -153,7 +156,7 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
                     for(var op of when.operations) {
                         if (this.willExecuteAutomatically(ks, op)) {
                             return c;
-                        } 
+                        }
                     }
                 }
             }
@@ -166,13 +169,14 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
         return null;
     }
     private getFilesSync(srcpath : string) : string[] {
-        return fs.readdirSync(srcpath).filter((file : string) => fs.statSync(path.join(srcpath, file)).isFile()).map((f:string) => srcpath + '/' + f );
+        return fs.readdirSync(srcpath).filter((file : string) => 
+               fs.statSync(path.join(srcpath, file)).isFile()).map((f:string) => srcpath + "/" + f );
     }
 
     private willExecuteAutomatically(ks:Kottbullescript, op: KsCaseBodyOperation) : boolean {
         if(op.action === "event") {
             let event = op as KsEventOperation;
-            if (event.eventName === "load") {                
+            if (event.eventName === "load") {
                 return event.reference.startsWith("app.") || event.reference.includes(ks.getApp().appName); 
             }
         }
@@ -187,20 +191,20 @@ export abstract class KsProjectCodeGeneratorBase implements IKsProjectCodeGenera
  * @class KsProjectCodeGeneratorProvider
  */
 export class KsProjectCodeGeneratorProvider {
-    
+
     codeGenerators: CodeGeneratorLanguagePair[] = [];
 
-    register(generator: IKsProjectCodeGenerator) {
+    register(generator: IKsProjectCodeGenerator): void {
         this.codeGenerators.push(new CodeGeneratorLanguagePair(generator.getLanguage(), generator));
     }
 
-    get(language: string) : IKsProjectCodeGenerator {
+    get(language: string): IKsProjectCodeGenerator {
         for(var generator of this.codeGenerators) {
             if(generator.language === language) {
                 return generator.codeGenerator;
             }
         }
-    } 
+    }
 }
 
 /**
@@ -209,7 +213,7 @@ export class KsProjectCodeGeneratorProvider {
  * @export
  * @class KsProjectGenerator
  */
-export class KsProjectGenerator {    
+export class KsProjectGenerator {
     private templateProvider : KsProjectTemplateProvider;
     private codeGeneratorProvider    : KsProjectCodeGeneratorProvider;
     constructor(codeGeneratorProvider: KsProjectCodeGeneratorProvider, templateProvider : KsProjectTemplateProvider) {
@@ -217,24 +221,25 @@ export class KsProjectGenerator {
         this.codeGeneratorProvider = codeGeneratorProvider;
     }
 
-    generate(ks: Kottbullescript, settings: KsProjectGeneratorSettings) {
+    generate(ks: Kottbullescript, settings: KsProjectGeneratorSettings): void {
         let app = ks.getApp();
         if (!app) {
             throw SyntaxError("PANIC!!! App could not be found. Why u no define??");
         }
-        
+
         let language = app.meta.getValue("language");
         if (!language) {
-            throw SyntaxError("PANIC!!! Output language not defined!! Did you forget to set the language? `set language \"language_name\"` example: `set language \"typescript\"`");
+            throw SyntaxError("PANIC!!! Output language not defined!! Did you forget to set the language?"
+                            + "`set language \"language_name\"` example: `set language \"typescript\"`");
         }
 
-        let template = this.templateProvider.getTemplate(language);        
+        let template = this.templateProvider.getTemplate(language);
         this.prepareProjectFolder(template, settings);
         this.prepareProjectConfigurations(template, settings); 
         this.codeGeneratorProvider.get(language).generate(ks, template, settings);
     }
 
-    private prepareProjectFolder(template : KsProjectTemplate, settings : KsProjectGeneratorSettings) {                
+    private prepareProjectFolder(template : KsProjectTemplate, settings : KsProjectGeneratorSettings): void {
         if (!fs.existsSync(settings.outDir)) {
             fs.mkdirSync(settings.outDir);
         }
@@ -247,21 +252,21 @@ export class KsProjectGenerator {
             if (!fs.existsSync(toCreate)) {
                 fs.mkdirSync(toCreate);
             }
-        }        
+        }
     }
 
-    private prepareProjectConfigurations(template : KsProjectTemplate, settings : KsProjectGeneratorSettings) {        
-        let configFiles = template.projectConfigFiles;        
+    private prepareProjectConfigurations(template : KsProjectTemplate, settings : KsProjectGeneratorSettings): void {
+        let configFiles = template.projectConfigFiles;
         if (configFiles && configFiles.length > 0) {
             for(var file of configFiles) {
-                let filePaths  = file.split('/');
+                let filePaths  = file.split("/");
                 let fileName   = filePaths[filePaths.length-1];
                 let targetFile = settings.outDir + "/" + settings.projectName + "/" + fileName;
-                // NOTE(Kalle): this will not overwrite any files right now. So they have to be deleted on before hand if so                
+                // NOTE(Kalle): this will not overwrite any files right now. So they have to be deleted on before hand if so
                 if(!fs.existsSync(targetFile)) {
                     fs.createReadStream(file).pipe(fs.createWriteStream(targetFile));
                 }
-            }                        
+            }
         }
     }
 }
