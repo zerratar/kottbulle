@@ -1,4 +1,4 @@
-import { KsAppNode, KsTypeNode, KsFormNode, KsDatasourceNode, KsLiteralNode, KsLoadNode, KsFieldNode, KsStateNode, KsCaseNode, KsCaseBodyNode, KsEventNode, KsCreateNode, KsStateFieldSetNode, KsStoreNode, KsPrintNode } from './nodes/ksnodes';
+import { KsAppNode, KsTypeNode, KsFormNode, KsDatasourceNode,KsListNode, KsLiteralNode, KsLoadNode, KsFieldNode, KsStateNode, KsCaseNode, KsCaseBodyNode, KsEventNode, KsCreateNode, KsStateFieldSetNode, KsStoreNode, KsPrintNode } from './nodes/ksnodes';
 import { KsToken } from './kslexer';
 import { KsAst, KsAstNode } from './ksast';
 
@@ -189,6 +189,7 @@ export class KsTransformer {
             case "set"      : this.walkStateFieldSet(ctx, nodes, node); return;
             case "store"    : this.walkStore(ctx, nodes, node);         return;
             case "load"     : this.walkLoad(ctx, nodes, node);          return;
+            case "list"     : this.walkList(ctx, nodes, node);          return;
             case "print"    : this.walkPrint(ctx, nodes, node);         return;
             case "transform": this.walkTransform(ctx, nodes, node);     return;
             case "nothing"  : case "none" : this.walkEmpty(ctx);        return;            
@@ -203,6 +204,19 @@ export class KsTransformer {
         ctx.stack.push(new KsPrintNode(toPrintNode.name, toPrintNode.type === "name"));
         ctx.position++;                
     }
+
+    private walkList(ctx: KsTransformerContext, nodes : KsAstNode[], node : KsAstNode) { 
+        this.assertAvailableNodes(ctx, nodes, 1);
+        // list <aliasReference>
+        let toListNode  = nodes[++ctx.position];
+        let rowform     = "";      
+        if (ctx.position +1 < nodes.length && nodes[ctx.position+1].name === "using") { 
+            ctx.position++;
+            rowform = nodes[++ctx.position].name;
+        }        
+        ctx.stack.push(new KsListNode(toListNode.name, rowform));
+        ctx.position++;                
+    }        
 
     private walkStore(ctx: KsTransformerContext, nodes : KsAstNode[], node : KsAstNode) {
         this.assertAvailableNodes(ctx, nodes, 1);

@@ -199,6 +199,19 @@ export class KsPrintOperation extends KsCaseBodyOperation {
     }            
 }
 
+export class KsListOperation extends KsCaseBodyOperation {
+    reference : string;
+    rowform   : string;
+    constructor(caseName : string, reference : string, rowform : string) {
+        super("list", caseName);
+        this.reference = reference;
+        this.rowform   = rowform; 
+    }
+    getArguments() : string[] {
+        return [this.reference, this.rowform];
+    }    
+}
+
 export class KsStoreOperation extends KsCaseBodyOperation {
     reference  : string;
     datasource : string;

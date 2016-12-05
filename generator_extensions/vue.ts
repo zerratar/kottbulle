@@ -6,7 +6,7 @@ import { KsProjectTemplate } from './../generator/ksprojecttemplate';
 import { KsProjectTemplateProvider } from './../generator/ksprojecttemplateprovider';
 import { KsProjectGeneratorSettings } from './../generator/ksprojectgeneratorsettings';
 import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from './../generator/ksprojectgenerator';
-import { KsForm, KsType, KsEventOperation, KsFieldReference, KsDatasource,KsState, KsField, KsCase, KsArgument, KsCaseBody, KsLoadOperation, KsPrintOperation, KsCreateOperation, KsStoreOperation, KsCaseBodyOperation } from './../ks/definitions';
+import { KsForm, KsType, KsEventOperation, KsFieldReference, KsDatasource,KsState, KsField, KsCase, KsArgument, KsCaseBody, KsLoadOperation, KsPrintOperation, KsCreateOperation, KsStoreOperation, KsCaseBodyOperation,KsListOperation } from './../ks/definitions';
 
 class KsComponent {
     ctx            : KsProjectGeneratorContext;
@@ -198,10 +198,18 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         }
         if (op instanceof KsLoadOperation) {
             let load = op as KsLoadOperation;
-            if (load.datasource && load.datasource.length > 0){
-
+            if (load.datasource && load.datasource.length > 0) {
+                // TODO(Kalle): implement
             }
-            return "/* load " + load.alias + " from " + load.datasource + " where */"
+            return "/* load " + load.alias + " from " + load.datasource + " */"
+        }
+
+        if (op instanceof KsListOperation) {
+            let list = op as KsListOperation;
+            if (list.reference && list.reference.length > 0) {
+                // TODO(Kalle): implement
+            }
+            return "/* list " + list.reference + " */";
         }
         return "/* " + op.action  + " " + op.getArguments().join(", ") + " */";
     }

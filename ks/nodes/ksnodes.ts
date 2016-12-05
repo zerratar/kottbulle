@@ -42,6 +42,16 @@ export class KsPrintNode extends KsAstNode {
     }
 }
 
+export class KsListNode extends KsAstNode {
+    reference : string;
+    rowform   : string;
+    constructor(reference : string, rowform : string) {
+        super("operation", "list");
+        this.reference = reference;
+        this.rowform   = rowform;
+    } 
+}
+
 export class KsStoreNode extends KsAstNode {
     reference  : string;
     datasource : string;
