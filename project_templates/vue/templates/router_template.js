@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import { <%= model.app.appName %> } from 'components';
+import { <%= model.app.appName %> } from 'components'
 
 Vue.use(VueRouter)
 

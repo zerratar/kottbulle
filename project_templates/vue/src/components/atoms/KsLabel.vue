@@ -1,5 +1,5 @@
 <template>
-    <input type="email" id="InputEmail" name="InputEmail" class="InputEmail" ></input>
+    <label id="Kslabel" name="Kslabel" class="Kslabel"></label>
 </template>
 
 <script>
@@ -10,7 +10,7 @@ export default {
     }
   },
   created () {
-    console.log('InputEmail created')
+    console.log('Kslabel created')
   },
   methods: {
 

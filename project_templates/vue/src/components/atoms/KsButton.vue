@@ -3,17 +3,18 @@
 </template>
 
 <script>
-// tag: 'ksbutton'
 export default {
-    data() {
-      return {}
-    },
-    created() {
-        console.log('Ksbutton created')
-    },
-    components: {
-        
+  data () {
+    return {
+
     }
+  },
+  created () {
+    console.log('Ksbutton created')
+  },
+  components: {
+
+  }
 }
 </script>
 

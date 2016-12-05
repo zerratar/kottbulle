@@ -1,10 +1,10 @@
 export class $className$ extends $baseType$ {
-    constructor($parameters$) {
-        $fields$
-        $overrides$
-    }
+  constructor ($parameters$) {
+    $fields$
+    $overrides$
+  }
 
-    toString() {
-        return "$className$";
-    }    
+  toString () {
+    return '$className$'
+  }
 }

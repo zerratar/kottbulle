@@ -53,10 +53,12 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         this.generateIndex(ctx, startupCase);
         this.generateModels(ctx);
         this.generateApp(ctx, startupCase);
+        this.generateComponentsIndex(ctx);
         this.generatePackageJsonAndReadme(ctx);
-        
+
         this.copyFolderToProjectFolder('build/', './build', settings);
-        this.copyFolderToProjectFolder('config/', './config', settings);        
+        this.copyFolderToProjectFolder('config/', './config', settings);
+
 
         this.copyToProjectFolder('static/css/site.css', './static/css/site.css', settings);
 
@@ -206,10 +208,10 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         return this.getWindowRef(this.getCreateVariableName(create));
     }
     private getWindowRef(ref:string) : string {
-        return `window["`+ref+`"]`;
+        return `window['`+ref+`']`
     }
     private getCreateArgumentsString(create:KsCreateOperation, ctx: KsProjectGeneratorContext) {
-        return create.args.map((arg:KsArgument) => arg.isRef ? `"` + arg.value + `"` :
+        return create.args.map((arg:KsArgument) => arg.isRef ? `'` + arg.value + `'` :
                 this.getReferenceAccessScript(arg.value, create.caseName, ctx)
             ).join(", ");
     }
@@ -258,7 +260,7 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         for (var ds of datasources) out.push(this.getDatasourceScript(ds));
         for (var t of types) out.push(this.templateProcessor.process('templates/type_template.js', { "type": t, getDefaultValue: this.getDefaultValueForType }));
         for (var s of states) out.push(this.templateProcessor.process('templates/state_template.js', { "state": s, getDefaultValue: this.getDefaultValueForType }));
-        this.writeProjectFile('src/models.js', out.join("\n"), ctx.settings);
+        this.writeProjectFile('src/models.js', out.join(""), ctx.settings);
     }
 
     private getDatasourceScript(datasource:KsDatasource) : string {
@@ -270,7 +272,7 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
     }
 
     private getDefaultValueForType(type:string):string {
-        if (type === "string") return `""`;
+        if (type === "string") return `''`;
         if (type === "number") return `0`;
         return `undefined`;
     }
@@ -326,7 +328,7 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         } else {
 
             // "getEventHandlerCode": (eventHandler:string) => this.getEventHandlerCode(eventHandler, component.ctx, component)
-            component.events.forEach((eh:KsEventHandler) => this.generateEventHandlerCode(eh.eventHandler, component.ctx, component) );
+            //component.events.forEach((eh:KsEventHandler) => this.generateEventHandlerCode(eh.eventHandler, component.ctx, component) );
 
             let model = { "components": component.childComponents, "component": component, "name" : component.name };
             let componentView   = this.templateProcessor.process('/templates/component_template.html', model);
@@ -369,7 +371,7 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
 
         // TODO: This has to generate multiple store modules based on the number of
         // top-level cases there are.
-        this.writeProjectFile('src/modules/myApp.js', modulesContent, ctx.settings);
+        this.writeProjectFile('src/modules/MyApp.js', modulesContent, ctx.settings);
     }
 
     private generateRouterJs(ctx : KsProjectGeneratorContext) {
@@ -386,6 +388,14 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
         let indexContent = this.templateProcessor.process('/templates/page_template.html', model);
         this.writeProjectFile('index.html', indexContent, ctx.settings);
+    }
+
+    private generateComponentsIndex(ctx : KsProjectGeneratorContext) {
+        let ks    = ctx.script;
+        let app   = ks.getApp();
+        let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
+        let indexContent = this.templateProcessor.process('/templates/components_index_template.js', model);
+        this.writeProjectFile('src/components/index.js', indexContent, ctx.settings);
     }
 
 }

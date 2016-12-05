@@ -18,6 +18,6 @@ export default {
     */
   },
   getters: {
-    //key: state => state.key,
+    // key: state => state.key,
   }
 }
