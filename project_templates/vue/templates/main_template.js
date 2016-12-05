@@ -12,5 +12,6 @@ new Vue({
   http: {},
   store,
   router,
-  render: h => h(<%= model.app.appName %>)
+  template: '<<%= model.app.appName %>/>'
+  components: { <%= model.app.appName %> }
 })
