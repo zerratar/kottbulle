@@ -30,12 +30,26 @@ export class $datasourceName$ {
   store (item) {
     if (this.isDebug) {
       console.log(item + ' stored')
-    }
-    this.storage.setItem(this.itemIndex++, item)
+    }    
+    return new Promise(function(resolve, reject) {
+        try {
+          this.storage.setItem(this.itemIndex, item);
+          resolve(this.itemIndex++);
+        } catch(e) {
+          reject(Error(e));
+        }
+    });
   }
 
-  load (index) {
-    return this.storage.getItem(index)
+  load (index) {    
+    return new Promise(function(resolve, reject) {
+        try {
+          let item = this.storage.getItem(index);          
+          resolve(item);
+        } catch(e) {
+          reject(Error(e));
+        }
+    });
   }
 }
 

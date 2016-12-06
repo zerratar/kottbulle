@@ -185,7 +185,7 @@ export class KsInterpreter {
                         let caseBodyNode: KsCaseBodyNode = caseBodyInfo as KsCaseBodyNode;
                         let caseBody    : KsCaseBody     = new KsCaseBody(caseBodyNode.bodyName);
                         for (let k: number = 0; k < caseBodyNode.children.length; k++) {
-                            // . TODO(Kalle): implement operations
+                            // TODO(Kalle): implement operations
                             if (caseBodyNode.children[k] instanceof KsEventNode) {
                                 let eventNode: KsEventNode = caseBodyNode.children[k] as KsEventNode;
                                 caseBody.operations.push(new KsEventOperation(caseNode.caseName,

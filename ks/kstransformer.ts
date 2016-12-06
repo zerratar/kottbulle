@@ -290,7 +290,7 @@ export class KsTransformer {
         ctx.position++;
         let collection : string = nodes[++ctx.position].name;
 
-        // . TODO(Kalle): implement 'where'  
+        // TODO(Kalle): implement 'where'  
 
         ctx.stack.push(new KsRemoveNode(itemAlias, collection, where));
         ctx.position++;
@@ -600,7 +600,7 @@ export class KsTransformer {
         let prev: KsAstNode  = ctx.stack.pop();
         if (!(prev instanceof KsLiteralNode)) {
             throw new SyntaxError("Only literals are currently allowed as left side hand of a colon");
-            // . TODO(Kalle): implement left-side keyword for single line operations
+            // TODO(Kalle): implement left-side keyword for single line operations
             //              ex: keyword: literal1 literal2 literal3 ...
             //                  "when: event my_awesome_button click"
         }

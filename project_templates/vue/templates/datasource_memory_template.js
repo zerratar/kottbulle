@@ -1,5 +1,6 @@
 export class $datasourceName$ {
   constructor () {
+    this.itemIndex = 0
     this.items = []
     this.isDebug = true
   }
@@ -14,11 +15,26 @@ export class $datasourceName$ {
   store (item) {
     if (this.isDebug) {
       console.log(item + ' stored')
-    }
-    this.items.push(item)
+    }    
+    return new Promise(function(resolve, reject) {
+        try {          
+
+          this.items.push(item);
+          resolve(this.itemIndex++);
+        } catch(e) {
+          reject(Error(e));
+        }
+    });    
   }
 
-  load (index) {
-    return this.items[index]
+  load (index) {    
+    return new Promise(function(resolve, reject) {
+        try {
+          let item = this.items[index];          
+          resolve(item);
+        } catch(e) {
+          reject(Error(e));
+        }
+    });
   }
 }

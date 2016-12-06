@@ -387,15 +387,16 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
     }
 
     private generateModulesJs(ctx : KsProjectGeneratorContext): void {
-        let ks    = ctx.script;
-        let app   = ks.getApp();
-        let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
+        let ks          = ctx.script;
+        let app         = ks.getApp();
+        let datasources = ks.getDatasources(); 
+        let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app, "datasources": datasources };
         let indexContent = this.templateProcessor.process("/templates/modules_index_template.js", model);
         let modulesContent = this.templateProcessor.process("/templates/modules_template.js", model);
 
         this.writeProjectFile("src/modules/index.js", indexContent, ctx.settings);
 
-        // . TODO: This has to generate multiple store modules based on the number of
+        // TODO: This has to generate multiple store modules based on the number of
         // top-level cases there are.
         this.writeProjectFile("src/modules/MyApp.js", modulesContent, ctx.settings);
     }
