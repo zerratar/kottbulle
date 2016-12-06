@@ -1,5 +1,3 @@
-// test test comment
-
 define datasource UserCollection for User {
     set type "localstorage"
     // implemented:     set type "memory"
@@ -38,6 +36,13 @@ define case UserSignup {
     }
 }
 
+define situation UserLandsOnWebsite { 
+    set main true
+    cases {
+        UserSignup
+    }
+}
+
 define app MyApp {
     meta {
         set title "Awesomenezz"
@@ -47,7 +52,7 @@ define app MyApp {
         set platform "web"
         set language "vue"
     }
-    cases {
-        UserSignup
+    situations {
+        UserLandsOnWebsite
     }
 }

@@ -1,14 +1,14 @@
-import { Kottbullescript as KS } from './ks/kottbullescript';
+import { Kottbullescript as KS } from "./ks/kottbullescript";
 
-import { KsProjectTemplateProvider } from './generator/ksprojecttemplateprovider';
-import { KsProjectGeneratorSettings } from './generator/ksprojectgeneratorsettings';
-import { KsEventOperation, KsCreateOperation, KsStoreOperation } from './ks/definitions';
-import { KsProjectGenerator, KsProjectCodeGeneratorProvider } from './generator/ksprojectgenerator';
+import { KsProjectTemplateProvider } from "./generator/ksprojecttemplateprovider";
+import { KsProjectGeneratorSettings } from "./generator/ksprojectgeneratorsettings";
+import { KsEventOperation, KsCreateOperation, KsStoreOperation } from "./ks/definitions";
+import { KsProjectGenerator, KsProjectCodeGeneratorProvider } from "./generator/ksprojectgenerator";
 
-import { VueCodeGenerator } from './generator_extensions/vue';
-import { Html5CodeGenerator } from './generator_extensions/html5';
-import { CsharpCodeGenerator } from './generator_extensions/csharp';
-import { TypescriptCodeGenerator } from './generator_extensions/typescript';
+import { VueCodeGenerator } from "./generator_extensions/vue";
+import { Html5CodeGenerator } from "./generator_extensions/html5";
+import { CsharpCodeGenerator } from "./generator_extensions/csharp";
+import { TypescriptCodeGenerator } from "./generator_extensions/typescript";
 
 let verbose : boolean = false;
 
@@ -17,7 +17,8 @@ let verbose : boolean = false;
  */
 
 // let script = KS.loadFile(`./scripts/usersignup.html5.ks`);
-let script = KS.loadFile(`./scripts/usersignup.vue.ks`);
+// let script = KS.loadFile(`./scripts/usersignup.vue.ks`);
+let script = KS.loadFile(`./scripts/todoapp.vue.ks`);
 
 /*
     setup and generate our project based on the user signup script

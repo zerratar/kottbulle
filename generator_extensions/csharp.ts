@@ -1,17 +1,18 @@
 /// <reference path="../typings/node/node.d.ts" />
-import fs   = require('fs');
-import path = require('path');
-import { Kottbullescript } from './../ks/kottbullescript';
-import { KsProjectTemplate } from './../generator/ksprojecttemplate';
-import { KsProjectTemplateProvider } from './../generator/ksprojecttemplateprovider';
-import { KsProjectGeneratorSettings } from './../generator/ksprojectgeneratorsettings';
-import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from './../generator/ksprojectgenerator';
+import fs   = require("fs");
+import path = require("path");
+import { Kottbullescript } from "./../ks/kottbullescript";
+import { KsProjectTemplate } from "./../generator/ksprojecttemplate";
+import { KsProjectTemplateProvider } from "./../generator/ksprojecttemplateprovider";
+import { KsProjectGeneratorSettings } from "./../generator/ksprojectgeneratorsettings";
+import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, 
+         IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from "./../generator/ksprojectgenerator";
 
 export class CsharpCodeGenerator extends KsProjectCodeGeneratorBase {
     constructor() {
         super("csharp");
     }
-    generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {             
+    generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {
         console.log("Generating c# project code... ");
         let ctx = new KsProjectGeneratorContext(ks, template, settings);
         let app = ks.getApp();
@@ -30,7 +31,8 @@ export class CsharpCodeGenerator extends KsProjectCodeGeneratorBase {
         console.log("... And we're done!");
     }
 
-    private generateConsoleProject(ks: Kottbullescript, ctx: KsProjectGeneratorContext, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {
+    private generateConsoleProject(ks: Kottbullescript, ctx: KsProjectGeneratorContext, 
+                                   template: KsProjectTemplate, settings: KsProjectGeneratorSettings): void {
                 
     }
 }

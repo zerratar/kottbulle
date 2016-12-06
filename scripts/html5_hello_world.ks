@@ -24,6 +24,13 @@ define case PrintHelloWorld {
     }
 }    
 
+define situation UserLandsOnWebsite { 
+    set main true
+    cases {
+        PrintHelloWorld
+    }
+}
+
 define app HelloWorld {
     meta {
         set title "Hello World App"
@@ -34,7 +41,7 @@ define app HelloWorld {
         set platform "web"
         set language "html5"        
     }
-    cases {
-        PrintHelloWorld
+    situations {
+        UserLandsOnWebsite
     }
 }  

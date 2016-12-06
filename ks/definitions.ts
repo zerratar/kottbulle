@@ -1,4 +1,4 @@
-import { Kottbullescript } from './kottbullescript';
+import { Kottbullescript } from "./kottbullescript";
 
 export class KsField {
     fieldName    : string;
@@ -6,44 +6,44 @@ export class KsField {
     defaultValue : string;
     constructor (fieldName : string, fieldType : string, defaultValue : string = "") {
         this.fieldName    = fieldName;
-        this.fieldType    = fieldType; 
+        this.fieldType    = fieldType;
         this.defaultValue = defaultValue;
-    }    
+    }
 
-    getEventsFromCases(formName : string, cases: KsCase[]) : KsEventOperation[] {
+    getEventsFromCases(formName : string, cases: KsCase[]): KsEventOperation[] {
         let ops : KsEventOperation[] = [];
         for(var c of cases) {
-            this.getEventsFromCase(formName, c).filter((k:KsCaseBodyOperation) => (k instanceof KsEventOperation) 
-                                                                     && (k as KsEventOperation).reference.includes(formName + "." + this.fieldName))
-                                     .forEach((k2:KsCaseBodyOperation) => ops.push(k2 as KsEventOperation));
+            this.getEventsFromCase(formName, c).filter((k:KsCaseBodyOperation) => (k instanceof KsEventOperation)
+                                    && (k as KsEventOperation).reference.includes(formName + "." + this.fieldName))
+                                    .forEach((k2:KsCaseBodyOperation) => ops.push(k2 as KsEventOperation));
         }
         return ops;
     }
 
-    getEventsFromCase(formName : string, c: KsCase) : KsEventOperation[] {
-        let ops : KsEventOperation[] = [];        
+    getEventsFromCase(formName : string, c: KsCase): KsEventOperation[] {
+        let ops : KsEventOperation[] = [];
         for (var b of c.caseBodies) {
-            b.operations.filter((k:KsCaseBodyOperation) => (k instanceof KsEventOperation) 
+            b.operations.filter((k:KsCaseBodyOperation) => (k instanceof KsEventOperation)
                                                         && (k as KsEventOperation).reference.includes(formName + "." + this.fieldName))
                                      .forEach((k2:KsCaseBodyOperation) => ops.push(k2 as KsEventOperation));
-        }        
+        }
         return ops;
-    }    
+    }
 }
 
 export class KsFieldReference {
-    fieldName  : string;    
+    fieldName  : string;
     fieldValue : string;
     constructor (fieldName : string, fieldValue : string = "") {
-        this.fieldName    = fieldName;         
+        this.fieldName    = fieldName;
         this.fieldValue = fieldValue;
-    }    
+    }
 }
 
 export class KsAppMeta {
     values : KsFieldReference[] = [];
-    
-    getValue(key : string) {
+
+    getValue(key : string): string {
         for(var v of this.values) {
             if (v.fieldName === key) {
                 return v.fieldValue;
@@ -53,12 +53,12 @@ export class KsAppMeta {
 }
 
 export class KsApp {
-    appName : string;
-    meta    : KsAppMeta;    
-    cases   : string[] = [];
+    appName    : string;
+    meta       : KsAppMeta;
+    situations : string[] = [];
     constructor (appName : string) {
         this.appName = appName;
-    }        
+    }
 }
 
 export class KsForm {
@@ -67,28 +67,28 @@ export class KsForm {
     constructor (formName : string) {
         this.formName = formName;
     }
-    getEventsFromCases(cases: KsCase[]) : KsEventOperation[] {
+    getEventsFromCases(cases: KsCase[]): KsEventOperation[] {
         let ops : KsEventOperation[] = [];
         for(var c of cases) {
-            this.getEventsFromCase(c).filter((k:KsCaseBodyOperation) => (k instanceof KsEventOperation) 
+            this.getEventsFromCase(c).filter((k:KsCaseBodyOperation) => (k instanceof KsEventOperation)
                                                                      && (k as KsEventOperation).reference.includes("form." + this.formName))
                                      .forEach((k2:KsCaseBodyOperation) => ops.push(k2 as KsEventOperation));
         }
         return ops;
     }
 
-    getEventsFromCase(c: KsCase) : KsEventOperation[] {
-        let ops : KsEventOperation[] = [];        
+    getEventsFromCase(c: KsCase): KsEventOperation[] {
+        let ops : KsEventOperation[] = [];
         for (var b of c.caseBodies) {
-            b.operations.filter((k:KsCaseBodyOperation) => (k instanceof KsEventOperation) 
+            b.operations.filter((k:KsCaseBodyOperation) => (k instanceof KsEventOperation)
                                                         && (k as KsEventOperation).reference.includes("form." + this.formName))
                                      .forEach((k2:KsCaseBodyOperation) => ops.push(k2 as KsEventOperation));
-        }        
+        }
         return ops;
-    }        
+    }
 }
 
-export class KsDatasource {    
+export class KsDatasource {
     datasourceName : string;
     datasourceType : string;
     values         : KsFieldReference[] = [];
@@ -96,13 +96,13 @@ export class KsDatasource {
         this.datasourceName = datasourceName;
         this.datasourceType = datasourceType;
     }
-    getValue(key : string) {
+    getValue(key : string): string {
         for(var v of this.values) {
             if (v.fieldName === key) {
                 return v.fieldValue;
             }
         }
-    }    
+    }
 }
 
 export class KsState {
@@ -113,7 +113,7 @@ export class KsState {
     constructor (stateName : string, stateType : string) {
         this.stateName = stateName;
         this.stateType = stateType;
-    }    
+    }
 }
 
 export class KsType {
@@ -124,7 +124,7 @@ export class KsType {
     }
 }
 
-export class KsArgument {        
+export class KsArgument {
     value : string;
     isRef : boolean;
     constructor(value: string, isRef: boolean) {
@@ -142,25 +142,25 @@ export abstract class KsCaseBodyOperation {
         this.caseName = caseName;
     }
 
-    abstract getArguments() : string[];
+    abstract getArguments(): string[];
 }
 
 export class KsEventOperation extends KsCaseBodyOperation {
     reference      : string;
-    eventName      : string;    
+    eventName      : string;
     constructor(caseName : string, reference: string, eventName : string) {
         super("event", caseName);
         this.reference = reference;
         this.eventName = eventName;
     }
-    getArguments() : string[] {
+    getArguments(): string[] {
         return [this.reference, this.eventName];
     }
 }
 
 export class KsCreateOperation extends KsCaseBodyOperation {
     typeName : string;
-    alias    : string;    
+    alias    : string;
     args     : KsArgument[] = [];
     constructor(caseName : string, typeName: string, alias: string, args: KsArgument[]) {
         super("create", caseName);
@@ -168,22 +168,22 @@ export class KsCreateOperation extends KsCaseBodyOperation {
         this.alias    = alias;
         this.args     = args;
     }
-    getArguments() : string[] {
+    getArguments(): string[] {
         let a: string[] = [];
         for(var j of this.args) {
             a.push(j.value);
         }
         return  a;
-    }        
+    }
 }
 
 export class KsTransformOperation extends KsCaseBodyOperation {
     constructor(caseName : string) {
         super("transform", caseName);
-    }    
-    getArguments() : string[] {
-        return [];    
-    }    
+    }
+    getArguments(): string[] {
+        return [];
+    }
 }
 
 export class KsPrintOperation extends KsCaseBodyOperation {
@@ -194,9 +194,9 @@ export class KsPrintOperation extends KsCaseBodyOperation {
         this.toPrint = toPrint;
         this.byRef   = byRef;
     }
-    getArguments() : string[] {
+    getArguments(): string[] {
         return [this.toPrint];
-    }            
+    }
 }
 
 export class KsListOperation extends KsCaseBodyOperation {
@@ -205,11 +205,11 @@ export class KsListOperation extends KsCaseBodyOperation {
     constructor(caseName : string, reference : string, rowform : string) {
         super("list", caseName);
         this.reference = reference;
-        this.rowform   = rowform; 
+        this.rowform   = rowform;
     }
-    getArguments() : string[] {
+    getArguments(): string[] {
         return [this.reference, this.rowform];
-    }    
+    }
 }
 
 export class KsStoreOperation extends KsCaseBodyOperation {
@@ -218,11 +218,11 @@ export class KsStoreOperation extends KsCaseBodyOperation {
     constructor(caseName : string, reference : string, datasource : string) {
         super("store", caseName);
         this.reference  = reference;
-        this.datasource = datasource; 
+        this.datasource = datasource;
     }
-    getArguments() : string[] {
+    getArguments(): string[] {
         return [this.reference, this.datasource];
-    }    
+    }
 }
 
 export class KsLoadOperation extends KsCaseBodyOperation {
@@ -232,23 +232,23 @@ export class KsLoadOperation extends KsCaseBodyOperation {
     constructor(caseName : string, alias : string, datasource : string, where : string) {
         super("load", caseName);
         this.alias      = alias;
-        this.datasource = datasource; 
+        this.datasource = datasource;
         this.where      = where;
     }
-    getArguments() : string[] {
+    getArguments(): string[] {
         return [this.alias, this.datasource, this.where];
-    }    
+    }
 }
 
 export class KsCaseBody {
-    bodyName   : string;    
+    bodyName   : string;
     operations : KsCaseBodyOperation[] = [];
     constructor(bodyName : string) {
         this.bodyName = bodyName;
     }
 
-    getReferencesByType(refType : string, ks : Kottbullescript = null) : string[] {
-        let refs  : string[] = [];        
+    getReferencesByType(refType : string, ks : Kottbullescript = null): string[] {
+        let refs  : string[] = [];
         // let app     = ks.getApp();
         // let types   = ks.getTypes();
         // let cases   = ks.getCases();
@@ -256,24 +256,25 @@ export class KsCaseBody {
         // let states  = ks.getStates();
         // let sources = ks.getDatasources();
         for (var op of this.operations) {
-            let args = op.getArguments();            
+            let args: string[] = op.getArguments();
             for (var arg of args) {
-                let value : string;
-                if(arg.startsWith(refType + ".")) {                    
-                    refs.push(arg.split('.')[1]);
-                } 
+                // let value : string;
+                if(arg.startsWith(refType + ".")) {
+                    refs.push(arg.split(".")[1]);
+                }
                 // else {
                 //     let ref = this.findReference(arg,app,types,cases,forms,states,sources);
                 //     if (ref) {
                 //         refs.push(ref);
                 //     }
                 // }
-            }            
+            }
         }
         return refs;
     }
-    
-    // private findReference(inputArg: string, app:KsApp, types:KsType[], cases:KsCase[], forms:KsForm[], states:KsState[], datasources:KsDatasource[]) : string {
+
+    // private findReference(inputArg: string, app:KsApp, types:KsType[], cases:KsCase[], 
+    //                       forms:KsForm[], states:KsState[], datasources:KsDatasource[]) : string {
     //     let argValues : string[] = [];
     //     if (inputArg.includes('.')) {
     //         argValues = inputArg.split('.');
@@ -294,27 +295,52 @@ export class KsCaseBody {
     // }
 }
 
+export class KsSituation {
+    situationName : string;
+    cases         : string[];
+    attributes    : KsFieldReference[] = [];
+    constructor(situationName: string, cases: string[] = [], attributes: KsFieldReference[] = []) {
+        this.situationName = situationName;
+        this.cases         = cases;
+        this.attributes    = attributes;
+    }
+
+    isMain(): boolean {
+        return this.getAttribute("main") === "true";
+    }
+
+    getAttribute(key : string): string {
+        for(var v of this.attributes) {
+            if (v.fieldName === key) {
+                return v.fieldValue;
+            }
+        }
+    }
+}
+
 export class KsCase {
     caseName   : string;
     caseBodies : KsCaseBody[] = [];
     constructor (caseName : string) {
         this.caseName = caseName;
-    }    
+    }
 
-    getBody(name : string) : KsCaseBody {
-        if (!this.caseBodies || this.caseBodies.length === 0) return null;
+    getBody(name : string): KsCaseBody {
+        if (!this.caseBodies || this.caseBodies.length === 0) {
+            return null;
+        }
         return this.caseBodies.find((k : KsCaseBody) => k.bodyName === name);
     }
 
-    getDo() : KsCaseBody {
+    getDo(): KsCaseBody {
         return this.getBody("do");
     }
 
-    getWhen() : KsCaseBody {
+    getWhen(): KsCaseBody {
         return this.getBody("when");
     }
 
-    getResult() : KsCaseBody {
+    getResult(): KsCaseBody {
         return this.getBody("result");
-    }    
+    }
 }

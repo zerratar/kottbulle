@@ -1,4 +1,4 @@
-import { KsProgramTree } from './ksprogramtree';
+import { KsProgramTree } from "./ksprogramtree";
 
 export class KsValidationResult {
     isSuccess : boolean;
@@ -26,7 +26,7 @@ export class KsValidator {
      */
     validateAndThrowIfFailed(app: KsProgramTree) {
         let result = this.validate(app);
-        if (!result.isSuccess) {            
+        if (!result.isSuccess) {
             throw SyntaxError(result.reason.length === 0 ? "Unknown script error" : result.reason);
         }
     }

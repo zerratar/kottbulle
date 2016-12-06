@@ -1,25 +1,30 @@
 /// <reference path="../typings/node/node.d.ts" />
-import fs   = require('fs');
-import path = require('path');
-import { Kottbullescript } from './../ks/kottbullescript';
-import { KsProjectTemplate } from './../generator/ksprojecttemplate';
-import { KsProjectTemplateProvider } from './../generator/ksprojecttemplateprovider';
-import { KsProjectGeneratorSettings } from './../generator/ksprojectgeneratorsettings';
-import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from './../generator/ksprojectgenerator';
-import { KsForm, KsType, KsEventOperation, KsFieldReference, KsDatasource,KsState, KsField, KsCase, KsArgument, KsCaseBody, KsLoadOperation, KsPrintOperation, KsCreateOperation, KsStoreOperation, KsCaseBodyOperation,KsListOperation } from './../ks/definitions';
+import fs   = require("fs");
+import path = require("path");
+import { Kottbullescript } from "./../ks/kottbullescript";
+import { KsProjectTemplate } from "./../generator/ksprojecttemplate";
+import { KsProjectTemplateProvider } from "./../generator/ksprojecttemplateprovider";
+import { KsProjectGeneratorSettings } from "./../generator/ksprojectgeneratorsettings";
+import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, 
+         IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from "./../generator/ksprojectgenerator";
+import { KsForm, KsType, KsEventOperation, KsFieldReference, KsDatasource,
+         KsField, KsCase, KsArgument, KsCaseBody, KsLoadOperation, KsPrintOperation,
+         KsCreateOperation, KsStoreOperation, KsCaseBodyOperation,KsListOperation,
+         KsSituation } from "./../ks/definitions";
 
 class KsComponent {
     ctx            : KsProjectGeneratorContext;
     events         : KsEventHandler[] = [];
     childComponents: KsComponent[] = [];
     isForm         : boolean = false;
+    isNative       : boolean = false;
     location       : string;
     form           : KsForm;
     name           : string;
     tag            : string;
-    references     : string[] = [];
+    references     : string[] = [];    
 
-    addReference(ds:string) {
+    addReference(ds:string): void {
         if(!this.references.find((s:string) => s === ds)) {
             this.references.push(ds);
         }
@@ -31,7 +36,7 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         super("vue");
     }
 
-    generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings) {
+    generate(ks: Kottbullescript, template: KsProjectTemplate, settings: KsProjectGeneratorSettings): void {
         console.log("Generating vue project code... ");
         let ctx = new KsProjectGeneratorContext(ks, template, settings);
         let app = ks.getApp();
@@ -39,8 +44,8 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
             throw new SyntaxError("PANIC!! No app defined, forgot something maybe?");
         }
 
-        let startupCase = this.findStartupCase(ks);
-        if (!startupCase) {
+        let startupCases = this.findStartupCases(ks);
+        if (!startupCases) {
             throw new SyntaxError("PANIC!! Unable to find a suitable startup case. You MUST have at least one case defined! "
                                 + "Maybe in the future you won't but we have not implemented that shizzle yet. "
                                 + "Just define a case with nothing in it. It should be alright.");
@@ -50,19 +55,20 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         this.generateStoreJs(ctx);
         this.generateModulesJs(ctx);
         this.generateRouterJs(ctx);
-        this.generateIndex(ctx, startupCase);
+        this.generateIndex(ctx);
         this.generateModels(ctx);
-        this.generateApp(ctx, startupCase);
+        this.generateApp(ctx, startupCases);
+
         this.generateComponentsIndex(ctx);
         this.generatePackageJsonAndReadme(ctx);
 
-        this.copyFolderToProjectFolder('build/', './build', settings);
-        this.copyFolderToProjectFolder('config/', './config', settings);
+        this.copyFolderToProjectFolder("build/", "./build", settings);
+        this.copyFolderToProjectFolder("config/", "./config", settings);
 
 
-        this.copyToProjectFolder('static/css/site.css', './static/css/site.css', settings);
+        this.copyToProjectFolder("static/css/site.css", "./static/css/site.css", settings);
 
-        //this.writeProjectFile('src/js/site.js', this.generateSiteScript(ctx), ctx.settings);
+        // this.writeProjectFile('src/js/site.js', this.generateSiteScript(ctx), ctx.settings);
 
         console.log("... And we're done!");
     }
@@ -71,8 +77,8 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         let events      = this.generateEventHandlers(form.getEventsFromCases(ctx.script.getCases()));
         events.forEach((ke:KsEventHandler)=> ctx.addEventHandlerRef(ke));
         let name        = form.formName;
-        let tag         = name.toLowerCase().split('_').join("-");
-        let fieldType   = name.split('_').map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");
+        let tag         = name.toLowerCase().split("_").join("-");
+        let fieldType   = name.split("_").map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");
         let component   = new KsComponent();
         component.isForm   = true;
         component.events   = events;
@@ -80,31 +86,31 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         component.ctx      = ctx;
         component.name     = fieldType;
         component.tag      = tag;
-        component.location = 'components/organisms/' + component.name  + '.vue';
+        component.location = "components/organisms/" + component.name  + ".vue";
         for(var field of form.fields) {
             component.childComponents.push(this.getMoleculeComponent(ctx, form, field));
         }
         return component;
     }
 
-    getMoleculeComponent(ctx : KsProjectGeneratorContext, form : KsForm, field : KsField) : KsComponent {
+    getMoleculeComponent(ctx : KsProjectGeneratorContext, form : KsForm, field : KsField): KsComponent {
         let fieldEvents = this.generateEventHandlers(field.getEventsFromCases(form.formName, ctx.script.getCases()));
         fieldEvents.forEach((ke:KsEventHandler)=> ctx.addEventHandlerRef(ke));
         let name      = field.fieldName;
-        let tag       = name.toLowerCase().split('_').join("-");
-        let fieldType = name.split('_').map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");
+        let tag       = name.toLowerCase().split("_").join("-");
+        let fieldType = name.split("_").map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");
         let component = new KsComponent();
         component.events   = fieldEvents;
         component.form     = form;
         component.ctx      = ctx;
         component.name     = fieldType;
         component.tag      = tag;
-        component.location = 'components/molecules/' + component.name  + '.vue';
+        component.location = "components/molecules/" + component.name  + ".vue";
         component.childComponents = this.getAtomComponents(ctx, form, field);
         return component;
     }
 
-    getAtomComponents(ctx : KsProjectGeneratorContext, form : KsForm, field : KsField) : KsComponent[] {
+    getAtomComponents(ctx : KsProjectGeneratorContext, form : KsForm, field : KsField): KsComponent[] {
         if (field.fieldType.includes("button")) {
             return [this.getAtomComponent(ctx, form, "ks" + field.fieldType)];
         }
@@ -115,32 +121,37 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         ];
     }
 
-    getAtomComponent(ctx : KsProjectGeneratorContext, form : KsForm, name : string) : KsComponent {
-        let tag       = name.toLowerCase().split('_').join("-");
-        let fieldType = name.split('_').map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");
+    getAtomComponent(ctx : KsProjectGeneratorContext, form : KsForm, name : string): KsComponent {        
+        let tag       = name.toLowerCase().split("_").join("-");
+        let fieldType = name.split("_").map((v:string) => v[0].toUpperCase() + v.substring(1)).join("");
+        if (name === "input") { // ugly hack to use custom input-text when only "input" is specified
+            tag = "input-text";
+            fieldType = "InputText";
+        }
         let component = new KsComponent();
         component.form     = form;
         component.ctx      = ctx;
         component.name     = fieldType;
         component.tag      = tag;
-        component.location = 'components/atoms/' + component.name  + '.vue';
+        // component.isNative = name === "input";        
+        component.location = "components/atoms/" + component.name  + ".vue";
         return component;
     }
 
-    generateEventHandlers(events:KsEventOperation[]):KsEventHandler[]{
+    generateEventHandlers(events:KsEventOperation[]): KsEventHandler[] {
         let out:KsEventHandler[] = [];
         for(let e of events) {
-            let n = e.reference.split('.');
+            let n = e.reference.split(".");
             let name = n[n.length -1];
             out.push(new KsEventHandler(e.reference, e.caseName, e.eventName,
-                ( `${e.eventName}`).split('.').join('_')
+                ( `${e.eventName}`).split(".").join("_")
 
             ))
         }
         return out;
     }
 
-    generateEventHandlerCode(eventHandlerName : string, ctx: KsProjectGeneratorContext, currentComponent: KsComponent){
+    generateEventHandlerCode(eventHandlerName : string, ctx: KsProjectGeneratorContext, currentComponent: KsComponent): void {
         let src : string[] = [];
         let handler = ctx.getEventHandler(eventHandlerName);
         if (handler) {
@@ -149,17 +160,17 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         }
     }
 
-    private generateEventScriptBodyFromDo(doBody:KsCaseBody, ctx:KsProjectGeneratorContext, currentComponent: KsComponent) : string[] {
+    private generateEventScriptBodyFromDo(doBody:KsCaseBody, ctx:KsProjectGeneratorContext, currentComponent: KsComponent): string[] {
         return doBody.operations.map( (op : KsCaseBodyOperation) => this.getOperationScript(op,ctx,currentComponent));
     }
 
-    private getOperationScript(op : KsCaseBodyOperation, ctx:KsProjectGeneratorContext, currentComponent: KsComponent) : string {
+    private getOperationScript(op : KsCaseBodyOperation, ctx:KsProjectGeneratorContext, currentComponent: KsComponent): string {
         if (op instanceof KsPrintOperation) {
             let print = op as KsPrintOperation;
             if (print.byRef) {
                 let printValue = print.toPrint;
-                if (print.toPrint.includes('.')) {
-                    let refData = print.toPrint.split('.');
+                if (print.toPrint.includes(".")) {
+                    let refData = print.toPrint.split(".");
                     let objRef  = refData[0];
                     let field   = refData[1];
                     if (ctx.script.isForm(objRef)) {
@@ -182,7 +193,8 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
             let store = op as KsStoreOperation;
             if (store.datasource && store.datasource.length > 0) {
                 currentComponent.addReference(store.datasource);
-                return store.datasource + ".getInstance().store(" + this.getWindowRef(this.getVariableName(op.caseName, store.reference)) + ");";
+                return store.datasource + ".getInstance().store(" + 
+                this.getWindowRef(this.getVariableName(op.caseName, store.reference)) + ");";
             }
             return "/* store " + store.reference + " in " + store.datasource + " */";
         }
@@ -204,32 +216,32 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         return "/* " + op.action  + " " + op.getArguments().join(", ") + " */";
     }
 
-    private getWindowVariableReference(create:KsCreateOperation) {
+    private getWindowVariableReference(create:KsCreateOperation): string {
         return this.getWindowRef(this.getCreateVariableName(create));
     }
-    private getWindowRef(ref:string) : string {
-        return `window['`+ref+`']`
+    private getWindowRef(ref:string): string {
+        return `window['`+ref+`']`;
     }
-    private getCreateArgumentsString(create:KsCreateOperation, ctx: KsProjectGeneratorContext) {
+    private getCreateArgumentsString(create:KsCreateOperation, ctx: KsProjectGeneratorContext): string {
         return create.args.map((arg:KsArgument) => arg.isRef ? `'` + arg.value + `'` :
                 this.getReferenceAccessScript(arg.value, create.caseName, ctx)
             ).join(", ");
     }
 
-    private getCreateVariableName(create:KsCreateOperation){
+    private getCreateVariableName(create:KsCreateOperation): string {
         return this.getVariableName(create.caseName, create.alias);
     }
 
-    private getVariableName(caseName : string, varName : string) {
+    private getVariableName(caseName : string, varName : string): string {
         return caseName + `_` + varName;
     }
 
-    private getReferenceAccessScript(varName:string, thisCaseName:string, ctx: KsProjectGeneratorContext) : string {
+    private getReferenceAccessScript(varName:string, thisCaseName:string, ctx: KsProjectGeneratorContext): string {
         // try and locate the variable and then return the generated one. Most likely going to be window access
         // unless form, then we want to access the document element
         if (varName.includes(".")) {
             // reference access
-            let data  = varName.split('.');
+            let data  = varName.split(".");
             let owner = data[0];
             let field = data[1];
 
@@ -251,91 +263,105 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
         return varName;
     }
 
-    private generateModels(ctx : KsProjectGeneratorContext) {
+    private generateModels(ctx : KsProjectGeneratorContext): void {
         let datasources = ctx.script.getDatasources();
         let types       = ctx.script.getTypes();
         let states      = ctx.script.getStates();
         let out         = [];
 
-        for (var ds of datasources) out.push(this.getDatasourceScript(ds));
-        for (var t of types) out.push(this.templateProcessor.process('templates/type_template.js', { "type": t, getDefaultValue: this.getDefaultValueForType }));
-        for (var s of states) out.push(this.templateProcessor.process('templates/state_template.js', { "state": s, getDefaultValue: this.getDefaultValueForType }));
-        this.writeProjectFile('src/models.js', out.join(""), ctx.settings);
+        for (var ds of datasources) { out.push(this.getDatasourceScript(ds)); }
+        for (var t of types)  { 
+            out.push(this.templateProcessor.process("templates/type_template.js",
+            { "type": t, getDefaultValue: this.getDefaultValueForType }));
+        }
+
+        for (var s of states) {
+            out.push(this.templateProcessor.process("templates/state_template.js",
+            { "state": s, getDefaultValue: this.getDefaultValueForType }));
+        }
+
+        this.writeProjectFile("src/models.js", out.join(""), ctx.settings);
     }
 
-    private getDatasourceScript(datasource:KsDatasource) : string {
+    private getDatasourceScript(datasource:KsDatasource): string {
         let type = datasource.getValue("type");
         let name = datasource.datasourceName;
         let t    = datasource.datasourceType;
         let v   = this.getWindowRef(this.getVariableName(name, "instance"));
-        return this.templateProcessor.process('/templates/datasource_' + type + '_template.js', { "datasource":datasource, "$datasourceName$": name, "$instanceReference$": v });
+        return this.templateProcessor.process("/templates/datasource_" + type + "_template.js",
+               { "datasource":datasource, "$datasourceName$": name, "$instanceReference$": v });
     }
 
-    private getDefaultValueForType(type:string):string {
+    private getDefaultValueForType(type:string): string {
         if (type === "string") return `''`;
         if (type === "number") return `0`;
         return `undefined`;
     }
 
-    private generatePackageJsonAndReadme(ctx : KsProjectGeneratorContext) {
+    private generatePackageJsonAndReadme(ctx : KsProjectGeneratorContext): void {
         let ks    = ctx.script;
         let app   = ks.getApp();
         let model = { "$appTitle$" : app.meta.getValue("title"),
                               "$appDescription$" : app.meta.getValue("description"),
                               "$appAuthor$" : app.meta.getValue("author"),
                               "$appVersion$" : app.meta.getValue("version"), "app" : app };
-        let packages = this.templateProcessor.process('/templates/package.json', model);
-        let readme   = this.templateProcessor.process('/templates/README.md', model);
-        this.writeProjectFile('package.json', packages, ctx.settings);
-        this.writeProjectFile('README.md', readme, ctx.settings);
+        let packages = this.templateProcessor.process("/templates/package.json", model);
+        let readme   = this.templateProcessor.process("/templates/README.md", model);
+        this.writeProjectFile("package.json", packages, ctx.settings);
+        this.writeProjectFile("README.md", readme, ctx.settings);
     }
 
-    private generateApp(ctx : KsProjectGeneratorContext, startupCase : KsCase) {
+    private generateApp(ctx : KsProjectGeneratorContext, startupCases : KsCase[]): void {
         let ks    = ctx.script;
         let app   = ks.getApp();
         let forms = ks.getForms();
-        let whenBody  = startupCase.getWhen();
-        let doBody    = startupCase.getDo();
         let components:KsComponent[]=[];
-        if (whenBody) {
-            // NOTE(Kalle): determine which form(s) used and render those forms
-            let formReferences = whenBody.getReferencesByType("form");
-            for(var form of forms) {
-                for(var formRef of formReferences) {
-                     if (form.formName === formRef) {
-                         let component = this.getOrganismComponent(ctx, form, ks.getCases());
-                         this.generateComponent(component);
-                         components.push(component);
-                     }
+        for (let startupCase of startupCases) {
+            let whenBody  = startupCase.getWhen();
+            let doBody    = startupCase.getDo();
+            if (whenBody) {
+                // NOTE(Kalle): determine which form(s) used and render those forms
+                let formReferences = whenBody.getReferencesByType("form");
+                for(var form of forms) {
+                    for(var formRef of formReferences) {
+                        if (form.formName === formRef) {
+                            let component = this.getOrganismComponent(ctx, form, ks.getCases());
+                            this.generateComponent(component);
+                            components.push(component);
+                        }
+                    }
                 }
             }
         }
+        let model : any = { "$appTitle$" : app.meta.getValue("title"), "app" : app, "components":components };
+        let appView  : string = this.templateProcessor.process("/templates/app_template.html", model);
+        let appScript: string = this.templateProcessor.process("/templates/app_template.js", model);
+        let appStyle : string = this.templateProcessor.process("/templates/app_template.css", model);
+        let appVue   : string = this.templateProcessor.process("/templates/app_template.vue",
+            {"$templateView$" : appView, "$templateScript$" : appScript, "$templateStyle$" : appStyle});
 
-        let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app, "components":components };
-        let appView   = this.templateProcessor.process('/templates/app_template.html', model);
-        let appScript = this.templateProcessor.process('/templates/app_template.js', model);
-        let appStyle  = this.templateProcessor.process('/templates/app_template.css', model);
-        let appVue    = this.templateProcessor.process('/templates/app_template.vue', {"$templateView$" : appView, "$templateScript$" : appScript, "$templateStyle$" : appStyle});
-        this.writeProjectFile('src/' + app.appName + '.vue', appVue, ctx.settings);
+        this.writeProjectFile("src/" + app.appName + ".vue", appVue, ctx.settings);
     }
 
-    private generateComponent(component : KsComponent) {
+    private generateComponent(component : KsComponent): void {
         // check if we have a template file matching the target component location, then we want to use that one.
         // that way we can provide pre-defined components. :)
-        if(this.templateFileExists('src/' + component.location,component.ctx.settings)) {
-            this.copyToProjectFolder('src/' + component.location,
-                                     'src/' + component.location, component.ctx.settings);
-        } else {
+        if(this.templateFileExists("src/" + component.location,component.ctx.settings)) {
+            this.copyToProjectFolder("src/" + component.location,
+                                     "src/" + component.location, component.ctx.settings);
+        } else if(!component.isNative) { // make sure we don't generate native components such as html input, button, etc
 
             // "getEventHandlerCode": (eventHandler:string) => this.getEventHandlerCode(eventHandler, component.ctx, component)
-            //component.events.forEach((eh:KsEventHandler) => this.generateEventHandlerCode(eh.eventHandler, component.ctx, component) );
+            // component.events.forEach((eh:KsEventHandler) => this.generateEventHandlerCode(eh.eventHandler, component.ctx, component) );
 
             let model = { "components": component.childComponents, "component": component, "name" : component.name };
-            let componentView   = this.templateProcessor.process('/templates/component_template.html', model);
-            let componentScript = this.templateProcessor.process('/templates/component_template.js', model);
-            let componentStyle  = this.templateProcessor.process('/templates/component_template.css', model);
-            let componentVue    = this.templateProcessor.process('/templates/component_template.vue', {"$templateView$" : componentView, "$templateScript$" : componentScript, "$templateStyle$" : componentStyle, "component": component});
-            this.writeProjectFile('src/' + component.location, componentVue, component.ctx.settings);
+            let componentView   = this.templateProcessor.process("/templates/component_template.html", model);
+            let componentScript = this.templateProcessor.process("/templates/component_template.js", model);
+            let componentStyle  = this.templateProcessor.process("/templates/component_template.css", model);
+            let componentVue    = this.templateProcessor.process("/templates/component_template.vue",
+                {"$templateView$" : componentView, "$templateScript$" : componentScript,
+                "$templateStyle$" : componentStyle, "component": component});
+            this.writeProjectFile("src/" + component.location, componentVue, component.ctx.settings);
         }
         // recursively generate the component
         if (component.childComponents && component.childComponents.length > 0) {
@@ -344,58 +370,58 @@ export class VueCodeGenerator extends KsProjectCodeGeneratorBase {
     }
 
 
-    private generateMainJs(ctx : KsProjectGeneratorContext) {
+    private generateMainJs(ctx : KsProjectGeneratorContext): void {
         let ks    = ctx.script;
         let app   = ks.getApp();
         let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
-        let indexContent = this.templateProcessor.process('/templates/main_template.js', model);
-        this.writeProjectFile('src/main.js', indexContent, ctx.settings);
+        let indexContent = this.templateProcessor.process("/templates/main_template.js", model);
+        this.writeProjectFile("src/main.js", indexContent, ctx.settings);
     }
 
-    private generateStoreJs(ctx : KsProjectGeneratorContext) {
+    private generateStoreJs(ctx : KsProjectGeneratorContext): void {
         let ks    = ctx.script;
         let app   = ks.getApp();
         let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
-        let indexContent = this.templateProcessor.process('/templates/store_template.js', model);
-        this.writeProjectFile('src/store.js', indexContent, ctx.settings);
+        let indexContent = this.templateProcessor.process("/templates/store_template.js", model);
+        this.writeProjectFile("src/store.js", indexContent, ctx.settings);
     }
 
-    private generateModulesJs(ctx : KsProjectGeneratorContext) {
+    private generateModulesJs(ctx : KsProjectGeneratorContext): void {
         let ks    = ctx.script;
         let app   = ks.getApp();
         let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
-        let indexContent = this.templateProcessor.process('/templates/modules_index_template.js', model);
-        let modulesContent = this.templateProcessor.process('/templates/modules_template.js', model);
+        let indexContent = this.templateProcessor.process("/templates/modules_index_template.js", model);
+        let modulesContent = this.templateProcessor.process("/templates/modules_template.js", model);
 
-        this.writeProjectFile('src/modules/index.js', indexContent, ctx.settings);
+        this.writeProjectFile("src/modules/index.js", indexContent, ctx.settings);
 
-        // TODO: This has to generate multiple store modules based on the number of
+        // . TODO: This has to generate multiple store modules based on the number of
         // top-level cases there are.
-        this.writeProjectFile('src/modules/MyApp.js', modulesContent, ctx.settings);
+        this.writeProjectFile("src/modules/MyApp.js", modulesContent, ctx.settings);
     }
 
-    private generateRouterJs(ctx : KsProjectGeneratorContext) {
+    private generateRouterJs(ctx : KsProjectGeneratorContext): void {
         let ks    = ctx.script;
         let app   = ks.getApp();
         let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
-        let indexContent = this.templateProcessor.process('/templates/router_template.js', model);
-        this.writeProjectFile('src/router.js', indexContent, ctx.settings);
+        let indexContent = this.templateProcessor.process("/templates/router_template.js", model);
+        this.writeProjectFile("src/router.js", indexContent, ctx.settings);
     }
 
-    private generateIndex(ctx : KsProjectGeneratorContext, startupCase : KsCase) {
+    private generateIndex(ctx : KsProjectGeneratorContext): void {
         let ks    = ctx.script;
         let app   = ks.getApp();
         let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
-        let indexContent = this.templateProcessor.process('/templates/page_template.html', model);
-        this.writeProjectFile('index.html', indexContent, ctx.settings);
+        let indexContent = this.templateProcessor.process("/templates/page_template.html", model);
+        this.writeProjectFile("index.html", indexContent, ctx.settings);
     }
 
-    private generateComponentsIndex(ctx : KsProjectGeneratorContext) {
+    private generateComponentsIndex(ctx : KsProjectGeneratorContext): void {
         let ks    = ctx.script;
         let app   = ks.getApp();
         let model = { "$appTitle$" : app.meta.getValue("title"), "app" : app };
-        let indexContent = this.templateProcessor.process('/templates/components_index_template.js', model);
-        this.writeProjectFile('src/components/index.js', indexContent, ctx.settings);
+        let indexContent = this.templateProcessor.process("/templates/components_index_template.js", model);
+        this.writeProjectFile("src/components/index.js", indexContent, ctx.settings);
     }
 
 }

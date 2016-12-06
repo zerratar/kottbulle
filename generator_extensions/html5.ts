@@ -1,14 +1,17 @@
 /// <reference path="../typings/node/node.d.ts" />
-import fs   = require('fs');
-import path = require('path');
-import { Kottbullescript } from './../ks/kottbullescript';
-import { KsProjectTemplate } from './../generator/ksprojecttemplate';
-import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from './../generator/ksprojectgenerator';
-import { KsProjectTemplateProvider } from './../generator/ksprojecttemplateprovider';
-import { KsProjectGeneratorSettings } from './../generator/ksprojectgeneratorsettings';
-import { KsForm, KsType,KsFieldReference, KsDatasource,KsState, KsField, KsCase, KsArgument, KsCaseBody, KsPrintOperation, KsCreateOperation, KsStoreOperation, KsCaseBodyOperation } from './../ks/definitions';
+import fs   = require("fs");
+import path = require("path");
+import { Kottbullescript } from "./../ks/kottbullescript";
+import { KsProjectTemplate } from "./../generator/ksprojecttemplate";
+import { KsProjectGeneratorContext, KsFormElement, KsEventHandler, 
+         IKsProjectCodeGenerator, KsProjectCodeGeneratorBase } from "./../generator/ksprojectgenerator";
+import { KsProjectTemplateProvider } from "./../generator/ksprojecttemplateprovider";
+import { KsProjectGeneratorSettings } from "./../generator/ksprojectgeneratorsettings";
+import { KsForm, KsType,KsFieldReference, KsDatasource,KsState, KsField,
+         KsCase, KsArgument, KsCaseBody, KsPrintOperation, KsCreateOperation,
+         KsStoreOperation, KsCaseBodyOperation } from "./../ks/definitions";
 
-class NavigationLink { 
+class NavigationLink {
     title : string;
     href  : string;
     constructor (title : string, href : string) {
@@ -18,7 +21,7 @@ class NavigationLink {
 }
 
 export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
-    
+
     constructor() {
         super("html5");
     }
@@ -33,26 +36,26 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         }
 
         // determine our starting point case
-        let startupCase = this.findStartupCase(ks);
-        if (!startupCase) {
+        let startupCases = this.findStartupCases(ks);
+        if (!startupCases) {
             throw new SyntaxError("PANIC!! Unable to find a suitable startup case. You MUST have at least one case defined! "
-                                + "Maybe in the future you won't but we have not implemented that shizzle yet. " 
-                                + "Just define a case with nothing in it. It should be alright.");                
+                                + "Maybe in the future you won't but we have not implemented that shizzle yet. "
+                                + "Just define a case with nothing in it. It should be alright.");
         }
-        
-        let formsToExclude = this.generateFrontPage(ctx, startupCase);
 
-        this.generateForms(ctx, formsToExclude, startupCase);                        
+        let formsToExclude = this.generateFrontPage(ctx, startupCases);
 
-        this.copyToProjectFolder('src/css/site.css', './src/css/site.css', settings);
+        this.generateForms(ctx, formsToExclude, startupCases);
 
-        this.writeProjectFile('src/js/site.js', this.generateSiteScript(ctx), ctx.settings);
+        this.copyToProjectFolder("src/css/site.css", "./src/css/site.css", settings);
+
+        this.writeProjectFile("src/js/site.js", this.generateSiteScript(ctx), ctx.settings);
 
         console.log("... And we're done!");
     }
 
-    private generateSiteScript(ctx : KsProjectGeneratorContext) : string {
-        let sitejs        = "";        
+    private generateSiteScript(ctx : KsProjectGeneratorContext): string {
+        let sitejs        = "";
         let types         = ctx.script.getTypes();
         let states        = ctx.script.getStates();
         // let transforms    = ctx.script.getTransforms();
@@ -71,87 +74,87 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
             let c      = ctx.script.getCase(handler.caseName);
             let doBody = c.getDo();
 
-            sitejs += this.templateProcessor.process('/templates/event_template.js', 
-            { "event":handler, "$eventHandlerName$": handler.eventHandler, "$eventHandlerBody$": this.generateEventScriptBodyFromDo(doBody, ctx) });
+            sitejs += this.templateProcessor.process("/templates/event_template.js", 
+            { "event":handler, "$eventHandlerName$": handler.eventHandler, "$eventHandlerBody$": 
+            this.generateEventScriptBodyFromDo(doBody, ctx) });
         }
         return sitejs;
     }
 
-    private getDatasourceScript(datasource:KsDatasource) : string {
+    private getDatasourceScript(datasource:KsDatasource): string {
         let type = datasource.getValue("type");
         let name = datasource.datasourceName;
         let t    = datasource.datasourceType;
-        let v   = this.getWindowRef(this.getVariableName(name, "instance"));        
-        return this.templateProcessor.process('/templates/datasource_' + type + '_template.js', { "datasource":datasource, "$datasourceName$": name, "$instanceReference$": v });        
+        let v   = this.getWindowRef(this.getVariableName(name, "instance"));
+        return this.templateProcessor.process("/templates/datasource_" + type + "_template.js",
+        { "datasource":datasource, "$datasourceName$": name, "$instanceReference$": v });
     }
 
-    private getTypeClassScript(type:KsType) : string {
+    private getTypeClassScript(type:KsType): string {
         let argString = type.fields.map((f:KsField) => f.fieldName).join(", ");
         let fields    = type.fields.map((f:KsField) => "this." + f.fieldName + " = " + f.fieldName + ";").join("\n        ");
-                
-        return this.templateProcessor.process('/templates/type_template.js', 
+
+        return this.templateProcessor.process("/templates/type_template.js", 
         { "type": type, "$className$": type.typeName, "$parameters$": argString, "$fields$": fields });
     }
 
-    private getStateClassScript(type:KsState) : string {
+    private getStateClassScript(type:KsState): string {
         let argString = type.fields.map((f:KsField) => f.fieldName).join(", ");
         let construct = type.fields.map((f:KsField) => "this." + f.fieldName + " = " + f.fieldName + ";").join("\n        ");
-        let overrides = type.overrides.map((f:KsFieldReference) => "this." + f.fieldName + " = '" + f.fieldValue + "';").join("\n        ");        
-        
-        return this.templateProcessor.process('/templates/state_template.js', 
-        { "state": type, "$className$": type.stateName, "$baseType$": type.stateType, "$parameters$": argString, "$fields$": construct, "$overrides$":overrides });        
+        let overrides = type.overrides.map((f:KsFieldReference) => "this." + f.fieldName + " = '" + f.fieldValue + "';").join("\n        ");
+
+        return this.templateProcessor.process("/templates/state_template.js", 
+        { "state": type, "$className$": type.stateName, "$baseType$": type.stateType,
+        "$parameters$": argString, "$fields$": construct, "$overrides$":overrides });
     }
 
-    private generateEventScriptBodyFromDo(doBody:KsCaseBody, ctx:KsProjectGeneratorContext) : string {        
+    private generateEventScriptBodyFromDo(doBody:KsCaseBody, ctx:KsProjectGeneratorContext): string {
         return doBody.operations.map( (op : KsCaseBodyOperation) => this.getOperationScript(op,ctx)).join("\n    ");
     }
 
-    private getOperationScript(op : KsCaseBodyOperation, ctx:KsProjectGeneratorContext) : string {
+    private getOperationScript(op : KsCaseBodyOperation, ctx:KsProjectGeneratorContext): string {
         if (op instanceof KsPrintOperation) {
             let print = op as KsPrintOperation;
             if (print.byRef) {
-                let printValue = print.toPrint;    
-                if (print.toPrint.includes('.')) {
-                    let refData = print.toPrint.split('.');
+                let printValue = print.toPrint;
+                if (print.toPrint.includes(".")) {
+                    let refData = print.toPrint.split(".");
                     let objRef  = refData[0];
                     let field   = refData[1];
                     if (ctx.script.isForm(objRef)) {
                         printValue = this.getWindowRef(this.getVariableName(op.caseName, objRef)) + "." + field + ".value";
                     } else {
                         printValue = this.getWindowRef(this.getVariableName(op.caseName, objRef)) + "." + field;
-                    }                    
-                }            
+                    }
+                }
                 return `document.body.appendChild(document.createTextNode(` + printValue + `));`;
+            } else {
+                return `document.body.appendChild(document.createTextNode("` + print.toPrint + `"));`;
             }
-            else {
-                return `document.body.appendChild(document.createTextNode("` + print.toPrint + `"));`;                
-            }
-        }
-        else if (op instanceof KsCreateOperation) {
-            let create = op as KsCreateOperation;            
-            return this.getWindowVariableReference(create) + ` = new ` + create.typeName + `(` 
+        } else if (op instanceof KsCreateOperation) {
+            let create = op as KsCreateOperation;
+            return this.getWindowVariableReference(create) + ` = new ` + create.typeName + `(`
             + this.getCreateArgumentsString(create, ctx) + `);`;
-        }
-        else if (op instanceof KsStoreOperation) {
+        } else if (op instanceof KsStoreOperation) {
             let store = op as KsStoreOperation;
             if (store.datasource && store.datasource.length > 0) {
-                return store.datasource + ".getInstance().store(" + this.getWindowRef(this.getVariableName(op.caseName, store.reference)) + ");";
-            } 
-            else {
+                return store.datasource + ".getInstance().store(" + 
+                this.getWindowRef(this.getVariableName(op.caseName, store.reference)) + ");";
+            } else {
                 return "// store " + store.reference + " in " + store.datasource;
             }
-        }     
+        }
         return "// " + op.action  + " " + op.getArguments().join(", ");
     }
 
     private getWindowVariableReference(create:KsCreateOperation) {
         return this.getWindowRef(this.getCreateVariableName(create));
     }
-    private getWindowRef(ref:string) : string {
+    private getWindowRef(ref:string): string {
         return `window["`+ref+`"]`;
     }
-    private getCreateArgumentsString(create:KsCreateOperation, ctx: KsProjectGeneratorContext) {
-        return create.args.map((arg:KsArgument) => arg.isRef ? `"` + arg.value + `"` : 
+    private getCreateArgumentsString(create:KsCreateOperation, ctx: KsProjectGeneratorContext): string {
+        return create.args.map((arg:KsArgument) => arg.isRef ? `"` + arg.value + `"` :
                 this.getReferenceAccessScript(arg.value, create.caseName, ctx)
             ).join(", ");
     }
@@ -164,15 +167,15 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
         return caseName + `_` + varName;
     }
 
-    private getReferenceAccessScript(varName:string, thisCaseName:string, ctx: KsProjectGeneratorContext) : string {
+    private getReferenceAccessScript(varName:string, thisCaseName:string, ctx: KsProjectGeneratorContext): string {
         // try and locate the variable and then return the generated one. Most likely going to be window access
         // unless form, then we want to access the document element
         if (varName.includes(".")) {
             // reference access
-            let data  = varName.split('.');
+            let data  = varName.split(".");
             let owner = data[0];
             let field = data[1];
-            
+
             // shift once to the right
             if (owner === "form" && data.length > 2) {
                 owner = data[1];
@@ -181,7 +184,7 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
 
             if (ctx.script.isForm(owner)) {
                 return varName + ".value"; // testing purposes, can work :P
-            }            
+            }
         } else {
             // variable created from current case
             return this.getWindowRef(this.getVariableName(thisCaseName, varName));
@@ -190,82 +193,82 @@ export class Html5CodeGenerator extends KsProjectCodeGeneratorBase {
     }
 
     private generateForms(ctx : KsProjectGeneratorContext,
-                          exclude : string[],                                                    
-                          startup : KsCase) { 
-        
+                          exclude : string[],
+                          startups: KsCase[]): void {
         let ks  = ctx.script;
         let app = ks.getApp();
-        // NOTE(Kalle): check if we should generate a single page or multiple pages. (1 form per page or all in one) 
-        let isSinglePage = app.meta.getValue("platform").includes("/single"); 
+        // . NOTE(Kalle): check if we should generate a single page or multiple pages. (1 form per page or all in one) 
+        let isSinglePage = app.meta.getValue("platform").includes("/single");
         if (isSinglePage) {
             throw new Error("Singlepage html5 is not yet supported!");
         } else {
 
-        // NOTE(Kalle): Keep it simple, we will go through all defined forms (if any), and determine which atoms we need
+        // . NOTE(Kalle): Keep it simple, we will go through all defined forms (if any), and determine which atoms we need
         //              and dynamically generate molecules and organisms
-            
+
             let forms = ks.getForms();
             let title = app.meta.getValue("title");
 
-        // NOTE(Kalle): loop forms twice
+        // . NOTE(Kalle): loop forms twice
         //              first time to build the navigation links
         //              second time to generate the actual html files 
 
 
             let links             = this.getNavigationLinks(forms, exclude);
-            let navigationContent = this.generateNavigationContent(links);  
+            let navigationContent = this.generateNavigationContent(links);
             for(var form of forms) {
-                if (exclude.indexOf(form.formName) >= 0) continue;
+                if (exclude.indexOf(form.formName) >= 0) { continue; }
                 let filename  = form.formName + ".html";
                 let content   = this.generatePageContent(title, navigationContent + this.generateFormContent(ctx, form, ks.getCases()))
-                this.writeProjectFile('./src/' + filename, content, ctx.settings);
+                this.writeProjectFile("./src/" + filename, content, ctx.settings);
             }
-                         
         }
     }
 
-    private getNavigationLinks(forms:KsForm[], exclude:string[] = []) : NavigationLink[] {
-        let links : NavigationLink[] = [new NavigationLink("Home", "index.html")];         
+    private getNavigationLinks(forms:KsForm[], exclude:string[] = []): NavigationLink[] {
+        let links : NavigationLink[] = [new NavigationLink("Home", "index.html")];
         for(var form of forms) {
-            if (exclude.indexOf(form.formName) >= 0) continue;
+            if (exclude.indexOf(form.formName) >= 0) { continue; }
             let filename  = form.formName + ".html";
             links.push(new NavigationLink(form.formName,  filename));
         }
         return links;
     }
- 
-    private generateFrontPage(ctx : KsProjectGeneratorContext, startupCase : KsCase): string[] {                
+
+    private generateFrontPage(ctx : KsProjectGeneratorContext, startupCases : KsCase[]): string[] {
         let formsToExclude : string[] = [];
         let ks    = ctx.script;
-        let app   = ks.getApp();                
+        let app   = ks.getApp();
         let forms = ks.getForms();
         let doContent   = "";
         let whenContent = "";
-        let whenBody  = startupCase.getWhen();
-        let doBody    = startupCase.getDo();
-        if (whenBody) {
-            // NOTE(Kalle): determine which form(s) used and render those forms
-            let formReferences = whenBody.getReferencesByType("form");            
-            for(var form of forms) {
-                for(var formRef of formReferences) { 
-                     if (form.formName === formRef) {
-                         whenContent += this.generateFormContent(ctx, form, ks.getCases());
-                         formsToExclude.push(formRef);
-                     }
+        for(let startupCase of startupCases) {
+            let whenBody  = startupCase.getWhen();
+            let doBody    = startupCase.getDo();
+            if (whenBody) {
+                // NOTE(Kalle): determine which form(s) used and render those forms
+                let formReferences = whenBody.getReferencesByType("form");
+                for(var form of forms) {
+                    for(var formRef of formReferences) { 
+                        if (form.formName === formRef) {
+                            whenContent += this.generateFormContent(ctx, form, ks.getCases());
+                            formsToExclude.push(formRef);
+                        }
+                    }
                 }
-            }                        
+            }
         }
-                
-        let navigationLinks   = this.getNavigationLinks(forms, formsToExclude);
-        let navigationContent = this.generateNavigationContent(navigationLinks);     
-        let pageContent = this.generatePageContent(app.meta.getValue("title"), navigationContent + whenContent);
-        
-        this.writeProjectFile('./src/index.html', pageContent, ctx.settings);
-        return formsToExclude;
-    }    
 
-    private generatePageContent(title : string, body : string) : string {        
-        return this.templateProcessor.process('/templates/page_template.html', { "$appTitle$": title, "$content$": body }); 
+        let navigationLinks   = this.getNavigationLinks(forms, formsToExclude);
+        let navigationContent = this.generateNavigationContent(navigationLinks);
+        let pageContent = this.generatePageContent(app.meta.getValue("title"), navigationContent + whenContent);
+
+        this.writeProjectFile("./src/index.html", pageContent, ctx.settings);
+        return formsToExclude;
+    }
+
+    private generatePageContent(title : string, body : string): string {
+        return this.templateProcessor.process("/templates/page_template.html", { "$appTitle$": title, "$content$": body }); 
     }
 
     private generateFormContent(ctx : KsProjectGeneratorContext, form : KsForm, cases: KsCase[]): string {

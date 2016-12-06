@@ -2,7 +2,7 @@ import { KsAstNode } from "./../ksast";
 
 export class KsEventNode extends KsAstNode {
     reference : string;
-    eventName : string;    
+    eventName : string;
     constructor(reference: string, eventName: string) {
         super("operation", "event");
         this.reference = reference;
@@ -28,7 +28,7 @@ export class KsCreateNode extends KsAstNode {
         super("operation", "create");
         this.typeName = typeName;
         this.alias    = alias;
-        this.args     = args; 
+        this.args     = args;
     }
 }
 
@@ -44,12 +44,16 @@ export class KsPrintNode extends KsAstNode {
 
 export class KsListNode extends KsAstNode {
     reference : string;
+    itemalias : string;
     rowform   : string;
-    constructor(reference : string, rowform : string) {
+    args      : KsLiteralNode[];
+    constructor(reference : string, itemalias: string, rowform : string, args:KsLiteralNode[]) {
         super("operation", "list");
         this.reference = reference;
+        this.itemalias = itemalias;
         this.rowform   = rowform;
-    } 
+        this.args      = args;
+    }
 }
 
 export class KsStoreNode extends KsAstNode {
@@ -59,7 +63,29 @@ export class KsStoreNode extends KsAstNode {
         super("operation", "store");
         this.reference  = reference;
         this.datasource = datasource;
-    } 
+    }
+}
+
+export class KsShowNode extends KsAstNode {
+    formReference : string;
+    modelReference: string;
+    constructor (formReference : string, modelReference: string) {
+        super("operation", "show");
+        this.formReference   = formReference;
+        this.modelReference  = modelReference;
+    }
+}
+
+export class KsRemoveNode extends KsAstNode {
+    alias      : string;
+    datasource : string;
+    where      : string;
+    constructor (alias : string, datasource : string, where : string) {
+        super("operation", "remove");
+        this.alias      = alias;
+        this.datasource = datasource;
+        this.where      = where;
+    }
 }
 
 export class KsLoadNode extends KsAstNode {
@@ -79,7 +105,7 @@ export class KsTypeNode extends KsAstNode {
     typeName : string;
     constructor(typeName : string = "") {
         super("definition", "type");
-    }    
+    }
 }
 
 export class KsFieldNode extends KsAstNode {
@@ -106,7 +132,7 @@ export class KsStateNode extends KsAstNode {
 
 export class KsCaseBodyNode extends KsAstNode {
     bodyName : string;
-    constructor(bodyName : string = "") {        
+    constructor(bodyName : string = "") {
         super("definition", "casebody");
         this.bodyName = bodyName;
     }
@@ -127,7 +153,7 @@ export class KsDatasourceNode extends KsAstNode {
         super("definition", "datasource");
         this.datasourceName = datasourceName;
         this.datasourceType = datasourceType;
-    }    
+    }
 }
 
 export class KsFormNode extends KsAstNode {
@@ -135,7 +161,17 @@ export class KsFormNode extends KsAstNode {
     constructor(formName : string = "") {
         super("definition", "form");
         this.formName = formName;
-    }    
+    }
+}
+
+export class KsSituationNode extends KsAstNode {
+    situationName : string;
+    cases         : string[];
+    constructor(situationName : string = "", cases: string[] = []) {
+        super("definition", "situation");
+        this.situationName = situationName;
+        this.cases         = cases;
+    }
 }
 
 export class KsCaseNode extends KsAstNode {
@@ -148,7 +184,7 @@ export class KsCaseNode extends KsAstNode {
 
 export class KsLiteralNode extends KsAstNode {
     value : string;
-    constructor(value : string) {        
+    constructor(value : string) {
         super("literal", "text");
         this.value = value;
     }

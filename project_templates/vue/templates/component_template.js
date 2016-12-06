@@ -1,7 +1,8 @@
-/* eslint-disable comma-dangle */
-<% if(model.component.references && model.component.references.length > 0) { %>import { <%= model.component.references.join(", ") %> } from './../../models.js'
-<% } %><% for(let i = 0; i < model.components.length; i++) { %>import <%= model.components[i].name %> from './../../<%= model.components[i].location %>'
-<% } %>
+/* eslint-disable comma-dangle */ <% if(model.component.references && model.component.references.length > 0) { %>
+import { <%= model.component.references.join(", ") %> } from './../../models.js' <% } %><% for(let i = 0; i < model.components.length; i++) { if (!model.components[i].isNative) { %> 
+import <%= model.components[i].name %> from './../../<%= model.components[i].location %>' 
+<% } } %>
+
 export default {
   data () {
     return {
